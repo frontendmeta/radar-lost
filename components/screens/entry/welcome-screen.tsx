@@ -4,7 +4,7 @@ import { ArrowRight, Check, KeyRound, Radar, Rocket, SlidersHorizontal, Triangle
 import type { AssistantInfo, Setup } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
 import { useApi } from '@/lib/client/hooks';
-import { ASSISTANT_LABEL, Button, ICON_STROKE, Skeleton, cn } from '@/components/ui';
+import { ASSISTANT_LABEL, BrandLogo, Button, ICON_STROKE, Skeleton, brandLogoSrc, cn } from '@/components/ui';
 import { InlineError } from '../states/inline';
 import { EntryBackdrop } from './backdrop';
 
@@ -102,9 +102,13 @@ function WelcomeBody({ setup, hasRuns }: { setup: Setup; hasRuns: boolean | unde
 
   return (
     <>
-      <span className="flex size-[72px] items-center justify-center rounded-pill bg-brand-500 ring-4 ring-brand-100">
-        <span className="font-display text-[34px] leading-none font-bold text-on-brand">{initial(brand.name)}</span>
-      </span>
+      {brandLogoSrc(brand.name, brand.domains, 'brand', 72) ? (
+        <BrandLogo name={brand.name} domain={brand.domains} kind="brand" size={72} className="rounded-full! ring-4 ring-brand-100" />
+      ) : (
+        <span className="flex size-[72px] items-center justify-center rounded-pill bg-brand-500 ring-4 ring-brand-100">
+          <span className="font-display text-[34px] leading-none font-bold text-on-brand">{initial(brand.name)}</span>
+        </span>
+      )}
       <div className="flex flex-col items-center gap-2.5">
         <h1 className="font-display text-[34px] leading-[1.09] font-bold tracking-[-0.7px] text-ink-900 sm:text-[44px] sm:tracking-[-0.9px]">
           Welcome to the {brand.name} radar

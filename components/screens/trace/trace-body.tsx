@@ -7,8 +7,8 @@ import {
 } from 'lucide-react';
 import type { Fix, Trace } from '@/lib/api-types';
 import {
-  ASSISTANT_LABEL, FixCard, ICON_STROKE, LOSS_REASON_LABEL, OUTCOME_LABEL, OutcomePill, QueryBubble, SearchPill, SourceRow, YouTag, cn,
-  competitorColor, formatInr, type ReasonKey,
+  ASSISTANT_LABEL, BrandLogo, FixCard, ICON_STROKE, LOSS_REASON_LABEL, OUTCOME_LABEL, OutcomePill, QueryBubble, SearchPill, SourceRow, YouTag, cn,
+  brandLogoSrc, competitorColor, formatInr, type ReasonKey,
 } from '../ui';
 import { plural } from '../format';
 
@@ -155,10 +155,6 @@ function ReasonPill({ reason, tone }: { reason: ReasonKey; tone: 'lost' | 'seen'
   );
 }
 
-function BrandDot({ color }: { color: string }) {
-  return <span aria-hidden className="inline-block size-2.5 shrink-0 rounded-full" style={{ background: color }} />;
-}
-
 function CompareCell({ value, note, good }: { value: ReactNode; note?: ReactNode; good?: boolean }) {
   return (
     <div className={cn('flex min-w-0 flex-1 flex-col gap-0.5 rounded-xl px-2.5 py-2', good ? 'bg-picked-50' : 'bg-surface-sunken')}>
@@ -186,8 +182,9 @@ function CompareRow({ label, ours, theirs }: { label: string; ours: ReactNode; t
 function ProductTile({ name, sub, color, you }: { name: string; sub: string; color: string; you?: boolean }) {
   return (
     <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-      <span className="flex h-[72px] w-14 items-center justify-center rounded-[14px]" style={tint(color)}>
+      <span className="relative flex h-[72px] w-14 items-center justify-center rounded-[14px]" style={tint(color)}>
         <Shirt aria-hidden size={24} strokeWidth={ICON_STROKE} style={{ color }} />
+        <BrandLogo name={name} size={20} color={color} decorative className="absolute -right-1.5 -bottom-1.5" />
       </span>
       <span className="flex items-center gap-1">
         <span className="truncate text-[14px] leading-[18px] font-bold text-ink-900">{name}</span>
@@ -324,11 +321,11 @@ export function TraceBody({ trace, focusBrandId, focusName, primaryBrandId, focu
                 <span
                   key={b}
                   className={cn(
-                    'inline-flex h-9 items-center gap-2 rounded-pill border pr-3.5 pl-3 text-[14px] leading-[18px] font-semibold text-ink-900',
+                    'inline-flex h-9 items-center gap-2 rounded-pill border pr-3.5 pl-1.5 text-[14px] leading-[18px] font-semibold text-ink-900',
                     isUs(b) ? 'border-brand-200 bg-brand-50' : 'border-ink-200 bg-surface',
                   )}
                 >
-                  <BrandDot color={colorOf(b)} />
+                  <BrandLogo name={b} size={22} color={colorOf(b)} decorative className="rounded-full!" />
                   {b}
                   {isUs(b) && <YouTag />}
                   {pick && same(b, pick.brand) && <Check aria-label="picked" size={14} strokeWidth={2.25} className="text-picked-500" />}
@@ -344,8 +341,9 @@ export function TraceBody({ trace, focusBrandId, focusName, primaryBrandId, focu
         <Step n={5} title="It picked">
           {pick ? (
             <Inner className="flex-row gap-3.5 p-3.5">
-              <span className="flex h-24 w-[72px] shrink-0 items-center justify-center rounded-[14px]" style={tint(colorOf(pick.brand))}>
+              <span className="relative flex h-24 w-[72px] shrink-0 items-center justify-center rounded-[14px]" style={tint(colorOf(pick.brand))}>
                 <Shirt aria-hidden size={28} strokeWidth={ICON_STROKE} style={{ color: colorOf(pick.brand) }} />
+                <BrandLogo name={pick.brand} size={24} color={colorOf(pick.brand)} decorative className="absolute -right-2 -bottom-2" />
               </span>
               <div className="flex min-w-0 flex-1 flex-col gap-2">
                 <p className="text-[15px] leading-[21px] font-semibold text-ink-900">
@@ -354,6 +352,9 @@ export function TraceBody({ trace, focusBrandId, focusName, primaryBrandId, focu
                 </p>
                 <p className="text-[17px] leading-[21px] font-bold text-ink-900 tabular-nums">{formatInr(pick.priceInr)}</p>
                 <p className="type-small text-ink-500">
+                  {brandLogoSrc(channelLabel(pick.channel), pick.channel, 'marketplace') && (
+                    <BrandLogo name={channelLabel(pick.channel)} domain={pick.channel} kind="marketplace" size={18} decorative className="mr-1.5 -mt-0.5 align-middle" />
+                  )}
                   {channelLabel(pick.channel)} · Delivery: {deliveryLabel(pick.deliveryDays).toLowerCase()}
                   {pick.url && (
                     <>
@@ -409,7 +410,7 @@ export function TraceBody({ trace, focusBrandId, focusName, primaryBrandId, focu
                   const why = o.outcome !== 'picked' && o.reason && o.reason !== 'not_found' ? LOSS_REASON_LABEL[o.reason] : null;
                   return (
                     <div key={o.brandId} className={cn('flex items-start gap-3 px-3.5 py-2.5', isUs(o.brandName) && 'bg-brand-50/60')}>
-                      <span className="flex pt-[7px]"><BrandDot color={colorOf(o.brandName)} /></span>
+                      <span className="flex pt-0.5"><BrandLogo name={o.brandName} size={20} color={colorOf(o.brandName)} decorative /></span>
                       <div className="flex min-w-0 flex-1 flex-col">
                         <span className="flex items-center gap-1.5 text-[14px] leading-6 font-semibold text-ink-900">
                           {o.brandName}

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Globe, Pencil, Plus, ShoppingCart } from 'lucide-react';
 import type { Brand, Marketplace } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
-import { Button, EmptyState, ICON_STROKE, Input, competitorColor } from '@/components/ui';
+import { BrandLogo, Button, EmptyState, ICON_STROKE, Input, brandLogoSrc, competitorColor } from '@/components/ui';
 import { ConfirmButton, FORM_WELL, InlineError, PanelHeader, TagInput, fieldError, generalError, toFormError, type FormError } from './shared';
 
 type Kind = 'competitor' | 'marketplace';
@@ -145,13 +145,17 @@ export function BrandsPanel({ kind, items, onChanged }: { kind: Kind; items: (Br
             return (
               <li key={it.id} className="flex flex-col border-b border-ink-200 last:border-b-0">
                 <div className="flex min-h-[76px] flex-wrap items-center gap-4 px-3 py-3 sm:flex-nowrap">
-                  <span
-                    aria-hidden
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full text-[17px] font-bold text-white"
-                    style={{ backgroundColor: isComp ? competitorColor(i) : 'var(--color-ink-500)' }}
-                  >
-                    {isComp ? it.name.charAt(0).toUpperCase() : <ShoppingCart size={18} strokeWidth={ICON_STROKE} />}
-                  </span>
+                  {brandLogoSrc(it.name, it.domains, isComp ? 'brand' : 'marketplace') ? (
+                    <BrandLogo name={it.name} domain={it.domains} kind={isComp ? 'brand' : 'marketplace'} size={40} decorative className="rounded-full!" />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full text-[17px] font-bold text-white"
+                      style={{ backgroundColor: isComp ? competitorColor(i) : 'var(--color-ink-500)' }}
+                    >
+                      {isComp ? it.name.charAt(0).toUpperCase() : <ShoppingCart size={18} strokeWidth={ICON_STROKE} />}
+                    </span>
+                  )}
                   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                     <span className="type-h3 text-ink-900">{it.name}</span>
                     <div className="flex flex-wrap items-center gap-1.5">

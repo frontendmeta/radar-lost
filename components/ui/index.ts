@@ -12,6 +12,7 @@ export { ReasonRow, type ReasonRowProps } from "./reason-row";
 export { LensChip, type LensChipProps } from "./lens-chip";
 export { AssistantBadge, type AssistantBadgeProps } from "./assistant-badge";
 export { AssistantLogo, type AssistantLogoProps } from "./assistant-logo";
+export { BrandLogo, brandLogoSrc, type BrandLogoProps, type BrandLogoKind } from "./brand-logo";
 export { OutcomeDot, type OutcomeDotProps } from "./outcome-dot";
 export { OutcomePill, type OutcomePillProps } from "./outcome-pill";
 export { DeltaBadge, type DeltaBadgeProps } from "./delta-badge";

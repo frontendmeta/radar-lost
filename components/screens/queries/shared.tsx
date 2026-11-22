@@ -3,7 +3,7 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { Check, IndianRupee, MapPin, Truck, type LucideIcon } from 'lucide-react';
 import type { Query, QueryRow, RunTask, Win } from '@/lib/api-types';
-import { ICON_STROKE, OutcomeDot, YouTag, cn, competitorColor, formatInr, type Outcome } from '../ui';
+import { BrandLogo, ICON_STROKE, OutcomeDot, YouTag, cn, competitorColor, formatInr, type Outcome } from '../ui';
 
 // ---------------------------------------------------------------- outcomes from counts
 
@@ -112,11 +112,11 @@ export function WinnerChip({ name, style }: { name: string | null | undefined; s
   return (
     <span
       className={cn(
-        'inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-pill border pr-2.5 pl-2',
+        'inline-flex h-6 max-w-full min-w-0 items-center gap-1.5 rounded-pill border pr-2.5 pl-0.5',
         s.isFocus ? 'border-brand-200 bg-brand-50' : 'border-ink-200 bg-surface',
       )}
     >
-      <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ background: s.color }} />
+      <BrandLogo name={name} size={18} color={s.color} decorative className="rounded-full!" />
       <span className="truncate text-[12px] leading-4 font-semibold text-ink-900">{name}</span>
       {s.isPrimary && <YouTag className="h-4! px-1! text-[10px]!" />}
     </span>

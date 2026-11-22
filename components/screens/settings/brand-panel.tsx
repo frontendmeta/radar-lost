@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { ChevronDown, Radar, Rocket } from 'lucide-react';
 import type { Brand } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
-import { ICON_STROKE, Input, YouTag } from '@/components/ui';
+import { BrandLogo, ICON_STROKE, Input, YouTag, brandLogoSrc } from '@/components/ui';
 import { InlineError, SaveBar, TagInput, fieldError, generalError, sameList, toFormError, type FormError } from './shared';
 
 const tooShort = (a: string) => a.replace(/\s/g, '').length < 4;
@@ -46,12 +46,16 @@ export function BrandPanel({ brand, onSaved }: { brand: Brand; onSaved: (msg: st
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <span
-          aria-hidden
-          className="flex size-20 shrink-0 items-center justify-center rounded-full bg-brand-500 font-display text-[36px] font-bold text-on-brand"
-        >
-          {initial}
-        </span>
+        {brandLogoSrc(shown, domains, 'brand', 80) ? (
+          <BrandLogo name={shown} domain={domains} kind="brand" size={80} decorative className="rounded-full!" />
+        ) : (
+          <span
+            aria-hidden
+            className="flex size-20 shrink-0 items-center justify-center rounded-full bg-brand-500 font-display text-[36px] font-bold text-on-brand"
+          >
+            {initial}
+          </span>
+        )}
         <Input
           label="Brand name"
           value={name}

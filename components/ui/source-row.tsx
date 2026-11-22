@@ -1,5 +1,6 @@
 import { ExternalLink, Quote } from "lucide-react";
 import type { SourceType } from "@/lib/api-types";
+import { BrandLogo, brandLogoSrc } from "./brand-logo";
 import { Chip } from "./chip";
 import { cn } from "./cn";
 import { ICON_STROKE, SOURCE_TYPE_LABEL } from "./meta";
@@ -29,6 +30,11 @@ export function SourceRow({
   className,
 }: SourceRowProps) {
   const letter = domain.replace(/^www\./, "").charAt(0).toUpperCase() || "?";
+  // Marketplace pages show the marketplace mark, brand sites the brand mark (matched by domain,
+  // then by the brand the page is about); everything else keeps the initial.
+  const logoKind = sourceType === "marketplace" ? "marketplace" : sourceType === "brand_site" ? "brand" : undefined;
+  const logoName = sourceType === "brand_site" && brand ? brand : domain;
+  const hasLogo = brandLogoSrc(null, domain) != null || (logoKind === "brand" && brandLogoSrc(logoName, domain, "brand") != null);
   return (
     <div
       className={cn(
@@ -37,12 +43,18 @@ export function SourceRow({
         className,
       )}
     >
-      <span
-        aria-hidden
-        className="flex size-7 shrink-0 items-center justify-center rounded-pill border border-ink-200 bg-surface-sunken text-[12px] leading-none font-bold text-ink-700"
-      >
-        {letter}
-      </span>
+      {hasLogo ? (
+        <span aria-hidden className="flex size-7 shrink-0 items-center justify-center">
+          <BrandLogo name={logoName} domain={domain} kind={logoKind === "brand" ? "brand" : undefined} size={24} decorative />
+        </span>
+      ) : (
+        <span
+          aria-hidden
+          className="flex size-7 shrink-0 items-center justify-center rounded-pill border border-ink-200 bg-surface-sunken text-[12px] leading-none font-bold text-ink-700"
+        >
+          {letter}
+        </span>
+      )}
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-[15px] leading-[21px] font-semibold text-ink-900">{domain}</span>
         <span className="truncate text-[13px] leading-[18px] text-ink-500">{title ?? "—"}</span>

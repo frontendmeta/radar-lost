@@ -5,6 +5,7 @@ import {
   AssistantBadge,
   Banner,
   BarRow,
+  BrandLogo,
   BrandTheme,
   Button,
   Card,
@@ -288,6 +289,27 @@ export default function DesignSystemPage() {
                 <AssistantBadge assistant="anthropic" showLabel />
               </div>
             </Spec>
+            <Spec caption="Brand logos · <BrandLogo name domain kind size>">
+              <div className="flex items-center gap-2.5">
+                {["Libas", "Jaipur Kurti", "Janasya", "Biba", "Aurelia"].map((b) => (
+                  <BrandLogo key={b} name={b} kind="brand" size={24} />
+                ))}
+              </div>
+            </Spec>
+            <Spec caption="Marketplace logos">
+              <div className="flex items-center gap-2.5">
+                {["Myntra", "Ajio", "Amazon", "Flipkart", "Nykaa Fashion"].map((m) => (
+                  <BrandLogo key={m} name={m} kind="marketplace" size={24} />
+                ))}
+              </div>
+            </Spec>
+            <Spec caption="Fallback · unknown → initial">
+              <div className="flex items-center gap-2.5">
+                <BrandLogo name="Kalini" size={24} color={competitorColor(2)} />
+                <BrandLogo name="Other" size={24} color={competitorColor(null)} />
+                <BrandLogo name="Libas" domain="libas.in" size={56} />
+              </div>
+            </Spec>
           </Card>
         </Section>
 
@@ -365,10 +387,10 @@ export default function DesignSystemPage() {
             </div>
             <div className="flex min-w-0 flex-1 flex-col gap-2.5">
               <span className="text-[12px] leading-4 font-semibold text-ink-500">Bar row · focus and competitor</span>
-              <BarRow name="Libas" n={12} share={0.14} isYou />
-              <BarRow name="Jaipur Kurti" n={19} share={0.22} color={competitorColor(0)} />
-              <BarRow name="Biba" n={9} share={0.11} color={competitorColor(1)} />
-              <BarRow name="Unknown" n={null} share={null} color={competitorColor(null)} />
+              <BarRow name="Libas" n={12} share={0.14} isYou logo={<BrandLogo name="Libas" decorative />} />
+              <BarRow name="Jaipur Kurti" n={19} share={0.22} color={competitorColor(0)} logo={<BrandLogo name="Jaipur Kurti" decorative />} />
+              <BarRow name="Biba" n={9} share={0.11} color={competitorColor(1)} logo={<BrandLogo name="Biba" decorative />} />
+              <BarRow name="Unknown" n={null} share={null} color={competitorColor(null)} logo={<BrandLogo name="Unknown" color={competitorColor(null)} decorative />} />
               <span className="pt-4 text-[12px] leading-4 font-semibold text-ink-500">Reason row</span>
               <ReasonRow reason="delivery_unclear_or_slow" n={24} share={0.32} />
               <ReasonRow reason="over_budget" n={14} share={0.19} />

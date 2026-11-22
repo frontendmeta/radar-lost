@@ -3,8 +3,8 @@
 import { ArrowUpRight, CircleCheck, CircleDashed, RefreshCw, Route, ShoppingBag, Target, Lightbulb } from 'lucide-react';
 import type { Assistant, ByAssistant, Fix, LossReasonRow, LostSale, Marketplace, SourcesBreakdown, SourceType, Summary, Trace, Win } from '@/lib/api-types';
 import {
-  ASSISTANT_LABEL, AssistantBadge, BarRow, Button, FixCard, ICON_STROKE, LOSS_REASON_LABEL, OutcomePill, ReasonRow, SOURCE_TYPE_LABEL,
-  Segmented, StatBlock, cn, competitorColor, formatCount, formatInr, formatPercent,
+  ASSISTANT_LABEL, AssistantBadge, BarRow, BrandLogo, Button, FixCard, ICON_STROKE, LOSS_REASON_LABEL, OutcomePill, ReasonRow, SOURCE_TYPE_LABEL,
+  Segmented, StatBlock, brandLogoSrc, cn, competitorColor, formatCount, formatInr, formatPercent,
 } from '../ui';
 import { Card, CardHeader, ErrorNote, Skeleton } from '../app-shell';
 import { plural } from '../format';
@@ -128,7 +128,9 @@ export function LostSaleCard({
   const outcomeLabel = sale.outcome === 'mentioned_lost' ? 'Named, lost' : sale.outcome === 'found_not_mentioned' ? 'Seen, never named' : 'Never found';
   const pickedLine = (
     <>
-      {ASSISTANT_LABEL[sale.assistant]} picked {sale.winner ?? 'another brand'}
+      {ASSISTANT_LABEL[sale.assistant]} picked{' '}
+      {sale.winner && <BrandLogo name={sale.winner} size={20} decorative className="mr-1 -mt-0.5 align-middle" />}
+      {sale.winner ?? 'another brand'}
       {sale.winnerPriceInr != null && ` · ${formatInr(sale.winnerPriceInr)}`}
       {pick?.channel && ` on ${channelName(pick.channel)}`}
     </>
@@ -153,7 +155,9 @@ export function LostSaleCard({
         </div>
         {our && (
           <div className="flex items-center gap-2.5">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-pill bg-brand-500 text-[14px] font-bold text-on-brand">{primaryName.charAt(0)}</span>
+            <span className="flex size-7 shrink-0 items-center justify-center">
+              <BrandLogo name={primaryName} kind="brand" size={24} color="var(--color-brand-500)" decorative />
+            </span>
             <p className="flex-1 text-[15px] leading-[22px] text-ink-700">
               {mode === 'win' ? (
                 <>
@@ -225,7 +229,18 @@ export function WinsCard({
         <div className={cn('flex flex-col gap-1 transition-opacity', loading && 'opacity-60')}>
           {wins.map((w) => {
             const color = w.isFocus ? 'var(--color-brand-500)' : w.isPrimary ? 'var(--color-brand-300)' : w.brandId === null ? 'var(--color-comp-other)' : competitorColor(rank++);
-            return <BarRow key={w.brandId ?? w.brandName} name={w.brandName} n={w.picks} share={w.share} isYou={w.isPrimary} highlighted={w.isFocus} color={color} />;
+            return (
+              <BarRow
+                key={w.brandId ?? w.brandName}
+                name={w.brandName}
+                n={w.picks}
+                share={w.share}
+                isYou={w.isPrimary}
+                highlighted={w.isFocus}
+                color={color}
+                logo={<BrandLogo name={w.brandName} size={20} color={color} decorative />}
+              />
+            );
           })}
         </div>
       )}
@@ -366,7 +381,13 @@ export function SourcesCard({ data, answers, focusName, loading, error, onRetry 
                 <tr key={d.domain} className="border-b border-ink-100 last:border-0">
                   <td className="py-2.5">
                     <div className="flex items-center gap-3">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-[12px] font-bold text-ink-700 uppercase">{d.domain.charAt(0)}</span>
+                      {brandLogoSrc(null, d.domain) ? (
+                        <span className="flex size-7 shrink-0 items-center justify-center">
+                          <BrandLogo name={d.domain} domain={d.domain} size={24} decorative />
+                        </span>
+                      ) : (
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-[12px] font-bold text-ink-700 uppercase">{d.domain.charAt(0)}</span>
+                      )}
                       <span className="type-body-strong text-ink-900">{d.domain}</span>
                       <span className="inline-flex h-6 items-center rounded-pill bg-ink-100 px-2.5 text-[12px] font-semibold text-ink-700">{SOURCE_TYPE_LABEL[d.type]}</span>
                     </div>
@@ -403,6 +424,10 @@ export function PickChannelsCard({ data, focusName, focusDomains, marketplaces =
   });
   const top = [...channels].sort((a, b) => b.n - a.n)[0];
   const name = (c: string) => channelName(c, marketplaces, focusDomains[0]);
+  const logoFor = (c: string) => {
+    const domain = c === 'brand_site' ? focusDomains : [c, ...(marketplaces.find((m) => m.name === name(c))?.domains ?? [])];
+    return brandLogoSrc(name(c), domain) ? <BrandLogo name={name(c)} domain={domain} size={20} decorative /> : null;
+  };
   const topIsOwn = top ? top.channel === 'brand_site' || focusDomains.some((d) => top.channel.toLowerCase().includes(d.toLowerCase()) || d.toLowerCase().includes(top.channel.toLowerCase())) : false;
   return (
     <Card className="min-w-0 flex-[486] gap-5">
@@ -431,7 +456,7 @@ export function PickChannelsCard({ data, focusName, focusDomains, marketplaces =
                 <li key={c.channel} className="flex items-start gap-2.5">
                   <span aria-hidden className="mt-1.5 size-2.5 shrink-0 rounded-full" style={{ backgroundColor: DONUT_COLORS[i % DONUT_COLORS.length] }} />
                   <span className="flex flex-col">
-                    <span className="type-body-strong text-ink-900">{name(c.channel)}</span>
+                    <span className="flex items-center gap-1.5 type-body-strong text-ink-900">{logoFor(c.channel)}{name(c.channel)}</span>
                     <span className="type-small text-ink-500">{plural(c.n, 'pick')} · {formatPercent(c.n / total)}</span>
                   </span>
                 </li>

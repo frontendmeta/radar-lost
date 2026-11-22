@@ -8,7 +8,7 @@ import { api, type Lens } from '@/lib/client/api';
 import { useApi } from '@/lib/client/hooks';
 import { ErrorNote, Skeleton } from '../app-shell';
 import {
-  ASSISTANT_LABEL, AssistantBadge, ICON_STROKE, LOSS_REASON_LABEL, OUTCOME_LABEL, OutcomePill, cn, formatCount, formatInr, type Outcome,
+  ASSISTANT_LABEL, BrandLogo, AssistantBadge, ICON_STROKE, LOSS_REASON_LABEL, OUTCOME_LABEL, OutcomePill, cn, formatCount, formatInr, type Outcome,
 } from '../ui';
 import { MiniChip, QueryChips, WinnerChip, type WinnerStyle } from './shared';
 
@@ -118,7 +118,8 @@ function ProductStrip({ product, brandName }: { product: Product | undefined; br
         <ShoppingBag aria-hidden size={18} strokeWidth={ICON_STROKE} />
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="text-[12px] leading-4 font-semibold text-ink-500">
+        <span className="flex items-center gap-1.5 text-[12px] leading-4 font-semibold text-ink-500">
+          <BrandLogo name={brandName} kind="brand" size={18} color="var(--color-brand-500)" decorative />
           {brandName}&apos;s product · {product.code}
         </span>
         <span className="truncate text-[14px] leading-5 font-semibold text-ink-900" title={product.name}>{product.name}</span>

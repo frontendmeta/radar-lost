@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "./cn";
 import { barWidth, formatCountShare } from "./format";
 import { YouTag } from "./you-tag";
@@ -16,6 +17,8 @@ export interface BarRowProps {
   color?: string;
   /** Override the right-hand value text. */
   valueLabel?: string;
+  /** Optional mark before the name, e.g. <BrandLogo decorative />. */
+  logo?: ReactNode;
   className?: string;
 }
 
@@ -28,6 +31,7 @@ export function BarRow({
   highlighted,
   color = "var(--color-brand-500)",
   valueLabel,
+  logo,
   className,
 }: BarRowProps) {
   const hl = highlighted ?? isYou;
@@ -40,6 +44,7 @@ export function BarRow({
       )}
     >
       <div className="flex w-[150px] shrink-0 items-center gap-2 min-w-0">
+        {logo}
         <span className="type-body-strong truncate text-ink-900" title={name}>
           {name}
         </span>

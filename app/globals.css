@@ -1,26 +1,347 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+ * Lost Sale Radar design tokens, extracted from Pencil "00 Tokens" (BXbxC).
+ * Light only: the design defines no dark theme.
+ *
+ * Brand accent ramp swaps per brand at runtime (see components/ui/brand-theme.tsx).
+ * The defaults below are the Libas sample (#C93A6E) the design is dressed in.
+ * Neutrals, marigold, outcomes, competitors and assistant colours never change.
+ */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@theme static {
+  /* ---- Brand accent ramp (overridable per brand) ---- */
+  --color-brand-50: #fdf2f6;
+  --color-brand-100: #fbe3ec;
+  --color-brand-200: #f6c2d6;
+  --color-brand-300: #ee95b6;
+  --color-brand-400: #e0628f;
+  --color-brand-500: #c93a6e;
+  --color-brand-600: #a82a58;
+  --color-brand-700: #862148;
+  --color-brand-800: #651a38;
+  --color-brand-900: #45132a;
+  /* Text colour on brand-500 (white when it passes 4.5:1, else ink-900) */
+  --color-on-brand: #ffffff;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* ---- Default accent: Peacock (sign-in, colourless logos) ---- */
+  --color-peacock-50: #eef8f8;
+  --color-peacock-100: #d3eeee;
+  --color-peacock-200: #a7dcdc;
+  --color-peacock-300: #6fc2c3;
+  --color-peacock-400: #35a2a4;
+  --color-peacock-500: #0f7c80;
+  --color-peacock-600: #0c6668;
+  --color-peacock-700: #0a5153;
+  --color-peacock-800: #083e40;
+  --color-peacock-900: #062b2c;
+
+  /* ---- Neutrals: warm, slightly rosy ---- */
+  --color-page: #fbf7f2;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #f6f1ec;
+  --color-ink-900: #1f1a1c;
+  --color-ink-700: #4a4245;
+  --color-ink-500: #786e71;
+  --color-ink-400: #9e9497;
+  --color-ink-300: #cfc6c8;
+  --color-ink-200: #e8e1e2;
+  --color-ink-100: #f4efee;
+
+  /* ---- Marigold: headline gap, needs attention ---- */
+  --color-marigold-50: #fff8eb;
+  --color-marigold-100: #fdefd3;
+  --color-marigold-300: #f7c978;
+  --color-marigold-500: #e8a13a;
+  --color-marigold-700: #9a6413;
+
+  /* ---- Outcomes (fixed meaning) ---- */
+  --color-picked-50: #eaf7f0;
+  --color-picked-500: #2e9e6b;
+  --color-picked-700: #1e6e4a;
+  --color-lost-50: #fdeeea;
+  --color-lost-500: #e2553f;
+  --color-lost-700: #a63a28;
+  --color-seen-50: #fff6e5;
+  --color-seen-500: #d9931f;
+  --color-seen-700: #8a5c10;
+
+  /* ---- Competitors (assigned in order of wins) ---- */
+  --color-comp-teal: #1f9e96;
+  --color-comp-indigo: #5463d9;
+  --color-comp-marigold: #e3962b;
+  --color-comp-olive: #7e9b3b;
+  --color-comp-sky: #4a93c9;
+  --color-comp-plum: #8e5bb5;
+  --color-comp-clay: #a0704a;
+  --color-comp-other: #b9afb1;
+
+  /* ---- Assistant identity (badges and per-assistant lines only) ---- */
+  --color-chatgpt: #1f1a1c;
+  --color-claude: #d97757;
+  --color-gemini: #4e7bee;
+
+  /* ---- Radius ---- */
+  --radius-card: 28px; /* page cards */
+  --radius-inner: 18px; /* inner cards, wells */
+  --radius-input: 14px;
+  --radius-bar: 8px; /* chart bars */
+  --radius-pill: 9999px; /* buttons, chips, dock */
+
+  /* ---- Elevation ---- */
+  --shadow-card: 0 1px 2px rgb(31 26 28 / 0.04), 0 8px 24px rgb(31 26 28 / 0.06);
+  --shadow-raised: 0 12px 32px rgb(31 26 28 / 0.12);
+  --shadow-overlay: 0 24px 64px rgb(31 26 28 / 0.18);
+
+  /* ---- Type scale (size / line-height / weight / tracking) ---- */
+  --text-display: 56px;
+  --text-display--line-height: 60px;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 700;
+  --text-lens: 34px;
+  --text-lens--line-height: 48px;
+  --text-lens--font-weight: 500;
+  --text-stat: 48px;
+  --text-stat--line-height: 52px;
+  --text-stat--font-weight: 700;
+  --text-h2: 22px;
+  --text-h2--line-height: 28px;
+  --text-h2--font-weight: 600;
+  --text-h3: 17px;
+  --text-h3--line-height: 24px;
+  --text-h3--font-weight: 600;
+  --text-body: 15px;
+  --text-body--line-height: 24px;
+  --text-small: 13px;
+  --text-small--line-height: 20px;
+  --text-small--font-weight: 500;
+  --text-label: 12px;
+  --text-label--line-height: 16px;
+  --text-label--letter-spacing: 0.02em;
+  --text-label--font-weight: 600;
+
+  /* ---- Motion ---- */
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --animate-pop-in: pop-in 320ms var(--ease-spring) both;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
   }
 }
 
+/*
+ * Semantic aliases. `inline` so utilities resolve the underlying variable at the
+ * element, which lets a <BrandTheme> wrapper re-skin accent utilities.
+ */
+@theme inline static {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --color-bg: var(--color-page);
+  --color-sunken: var(--color-surface-sunken);
+  --color-ink: var(--color-ink-900);
+  --color-ink-soft: var(--color-ink-700);
+  --color-muted: var(--color-ink-500);
+  --color-subtle: var(--color-ink-400);
+  --color-line: var(--color-ink-200);
+  --color-line-strong: var(--color-ink-300);
+  --color-card-line: rgb(232 225 226 / 0.7);
+
+  --color-accent: var(--color-brand-500);
+  --color-accent-strong: var(--color-brand-600);
+  --color-accent-soft: var(--color-brand-50);
+  --color-attention: var(--color-marigold-500);
+
+  --color-outcome-picked: var(--color-picked-500);
+  --color-outcome-picked-ink: var(--color-picked-700);
+  --color-outcome-picked-soft: var(--color-picked-50);
+  --color-outcome-named-lost: var(--color-lost-500);
+  --color-outcome-named-lost-ink: var(--color-lost-700);
+  --color-outcome-named-lost-soft: var(--color-lost-50);
+  --color-outcome-seen: var(--color-seen-500);
+  --color-outcome-seen-ink: var(--color-seen-700);
+  --color-outcome-seen-soft: var(--color-seen-50);
+  --color-outcome-never-found: var(--color-ink-300);
+  --color-outcome-never-found-ink: var(--color-ink-500);
+  --color-outcome-never-found-soft: var(--color-ink-100);
+  --color-outcome-failed: var(--color-ink-300);
+  --color-outcome-failed-ink: var(--color-ink-500);
+  --color-outcome-failed-soft: var(--color-ink-100);
+}
+
+/*
+ * `inline` theme values are not emitted as variables, so the aliases are also plain custom
+ * properties for var() consumers. Re-declared on brand wrappers so they follow the brand.
+ */
+:root,
+.theme-peacock,
+[data-brand-theme] {
+  --color-bg: var(--color-page);
+  --color-sunken: var(--color-surface-sunken);
+  --color-ink: var(--color-ink-900);
+  --color-ink-soft: var(--color-ink-700);
+  --color-muted: var(--color-ink-500);
+  --color-subtle: var(--color-ink-400);
+  --color-line: var(--color-ink-200);
+  --color-line-strong: var(--color-ink-300);
+  --color-card-line: rgb(232 225 226 / 0.7);
+  --color-accent: var(--color-brand-500);
+  --color-accent-strong: var(--color-brand-600);
+  --color-accent-soft: var(--color-brand-50);
+  --color-attention: var(--color-marigold-500);
+  --color-outcome-picked: var(--color-picked-500);
+  --color-outcome-named-lost: var(--color-lost-500);
+  --color-outcome-seen: var(--color-seen-500);
+  --color-outcome-never-found: var(--color-ink-300);
+  --color-outcome-failed: var(--color-ink-300);
+}
+
+/* Composite type styles: family + size + line-height + weight + tracking. */
+@utility type-display {
+  font-family: var(--font-display);
+  font-size: 56px;
+  line-height: 60px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+@utility type-lens {
+  font-family: var(--font-display);
+  font-size: 34px;
+  line-height: 48px;
+  font-weight: 500;
+}
+@utility type-stat {
+  font-family: var(--font-display);
+  font-size: 48px;
+  line-height: 52px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+@utility type-h2 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 600;
+}
+@utility type-h3 {
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
+}
+@utility type-body {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 400;
+}
+@utility type-body-strong {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 600;
+}
+@utility type-small {
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+}
+@utility type-label {
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+@utility type-num {
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 24px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Elevation helpers that pair the shadow with its border. */
+@utility elevation-flat {
+  border: 1px solid var(--color-ink-200);
+}
+@utility elevation-card {
+  border: 1px solid rgb(232 225 226 / 0.7);
+  box-shadow: var(--shadow-card);
+}
+
+/* Peacock accent for sign-in and brands with colourless logos. */
+.theme-peacock {
+  --color-brand-50: var(--color-peacock-50);
+  --color-brand-100: var(--color-peacock-100);
+  --color-brand-200: var(--color-peacock-200);
+  --color-brand-300: var(--color-peacock-300);
+  --color-brand-400: var(--color-peacock-400);
+  --color-brand-500: var(--color-peacock-500);
+  --color-brand-600: var(--color-peacock-600);
+  --color-brand-700: var(--color-peacock-700);
+  --color-brand-800: var(--color-peacock-800);
+  --color-brand-900: var(--color-peacock-900);
+  --color-on-brand: #ffffff;
+}
+
+/* Plain CSS custom properties for non-Tailwind consumers. */
+:root {
+  --bg: var(--color-page);
+  --surface: var(--color-surface);
+  --ink: var(--color-ink-900);
+  --muted: var(--color-ink-500);
+  --accent: var(--color-brand-500);
+  --duration-hover: 160ms;
+  --duration-bar: 500ms;
+  --duration-count: 600ms;
+  --duration-lens: 400ms;
+}
+
+html {
+  background: var(--color-page);
+  color-scheme: light;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-page);
+  color: var(--color-ink-900);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 24px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
 }

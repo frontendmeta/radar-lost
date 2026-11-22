@@ -71,9 +71,9 @@ function SignInFallback() {
 
 export default function LoginPage() {
   return (
-    <main className="theme-peacock grid min-h-screen w-full flex-1 grid-cols-1 grid-rows-[auto_1fr] bg-page lg:grid-cols-[55fr_45fr] lg:grid-rows-1">
+    <main className="theme-peacock grid min-h-dvh w-full flex-1 grid-cols-1 grid-rows-[auto_1fr] bg-page lg:h-dvh lg:grid-cols-[55fr_45fr] lg:grid-rows-1 lg:overflow-hidden">
       <SignInArt />
-      <section className="flex items-center justify-center bg-surface-sunken px-4 py-12 sm:px-6">
+      <section className="flex items-center justify-center bg-surface-sunken px-4 py-8 sm:px-6 lg:py-0">
         <div className="flex w-full max-w-[420px] flex-col gap-5 rounded-card bg-surface p-7 elevation-card sm:p-9">
           <div className="flex flex-col gap-1.5">
             <h2 className="font-display text-[28px] leading-[34px] font-bold tracking-[-0.4px] text-ink-900">Sign in</h2>

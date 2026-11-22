@@ -27,48 +27,40 @@ function StoryCard() {
 }
 
 const HOW_IT_WORKS = [
-  {
-    title: 'We play your shopper.',
-    body: 'Real questions your customers ask, with a budget, a size, a city and a deadline, go to ChatGPT, Claude and Gemini with web search on.',
-  },
-  {
-    title: 'We record every decision.',
-    body: 'What each AI searched, which sites it read, what it shortlisted and which brand it finally picked.',
-  },
-  {
-    title: 'You see why you lost.',
-    body: 'How often you were found, mentioned and picked, who beat you, the reason behind each lost sale, and three fixes to win it back.',
-  },
+  { title: 'We play your shopper.', body: 'Real customer questions go to ChatGPT, Claude and Gemini.' },
+  { title: 'We record every decision.', body: 'What each AI searched, read and picked.' },
+  { title: 'You see why you lost.', body: 'Who beat you, why, and 3 fixes to win it back.' },
 ];
 
-/** Frame 60 left half: blobs, booti field, product mark, story card and the pitch. Wrap in .theme-peacock. */
+/**
+ * Frame 60 left half. On desktop it is exactly one viewport tall (no scroll): the story card only
+ * shows when there is height for it, and type scales with the viewport height.
+ */
 export function SignInArt() {
   return (
-    <section className="relative isolate flex flex-col overflow-hidden px-6 pt-8 pb-10 sm:px-10 lg:min-h-screen lg:px-[72px] lg:pt-10 lg:pb-[72px]">
+    <section className="relative isolate flex flex-col overflow-hidden px-6 pt-6 pb-6 sm:px-10 lg:h-dvh lg:px-[64px] lg:pt-8 lg:pb-10">
       <EntryBackdrop variant="sign-in" />
       <ProductMark />
-      <div className="mt-14 hidden justify-end lg:flex lg:pr-[30px]">
+      <div className="hidden min-h-0 flex-1 items-center justify-end lg:pr-[30px] [@media(min-height:860px)]:lg:flex">
         <StoryCard />
       </div>
-      <div className="mt-10 flex flex-col gap-5 lg:mt-auto lg:pt-12">
-        <h1 className="max-w-[520px] font-display text-[40px] leading-[1.05] font-bold tracking-[-0.9px] text-ink-900 sm:text-[48px] xl:text-[56px] xl:tracking-[-1.2px]">
+      <div className="mt-6 flex flex-col gap-[clamp(12px,2vh,20px)] lg:mt-auto">
+        <h1 className="max-w-[520px] font-display text-[34px] leading-[1.05] font-bold tracking-[-0.8px] text-ink-900 lg:text-[clamp(34px,5.6vh,56px)]">
           See the sales AI shoppers take from you.
         </h1>
-        <p className="max-w-[520px] text-[17px] leading-[1.6] text-ink-700">
-          Shoppers now ask ChatGPT, Claude or Gemini to find the best product and buy it. The AI compares,
-          picks and orders, and the brand that loses never finds out, because analytics tools count these
-          visits as bot traffic.
+        <p className="max-w-[500px] text-[16px] leading-[1.5] text-ink-700">
+          Shoppers now ask AI to find and buy for them. The brand that loses never finds out.
         </p>
-        <ol className="flex max-w-[520px] flex-col gap-3.5" aria-label="How Lost Sale Radar works">
+        <ol className="hidden max-w-[520px] flex-col gap-2 sm:flex" aria-label="How Lost Sale Radar works">
           {HOW_IT_WORKS.map((step, i) => (
-            <li key={step.title} className="flex gap-3.5">
+            <li key={step.title} className="flex items-center gap-3">
               <span
                 aria-hidden
-                className="mt-0.5 inline-flex size-7 shrink-0 items-center justify-center rounded-pill bg-surface text-[13px] font-bold text-ink-900 shadow-card"
+                className="inline-flex size-6 shrink-0 items-center justify-center rounded-pill bg-surface text-[12px] font-bold text-ink-900 shadow-card"
               >
                 {i + 1}
               </span>
-              <p className="text-[15px] leading-[1.55] text-ink-700">
+              <p className="text-[14px] leading-[1.4] text-ink-700">
                 <span className="font-semibold text-ink-900">{step.title}</span> {step.body}
               </p>
             </li>

@@ -3,11 +3,11 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, KeyRound, Rocket } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, KeyRound, Minus, Rocket } from 'lucide-react';
 import type { Assistant } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
 import { useApi } from '@/lib/client/hooks';
-import { ASSISTANT_LABEL, AssistantBadge, Banner, Button, ICON_STROKE, Input, Stepper, Toggle, cn } from '../ui';
+import { ASSISTANT_LABEL, AssistantBadge, Banner, Button, ICON_STROKE, Input, Stepper, Toggle, cn, formatInr } from '../ui';
 import { ErrorNote, Skeleton } from '../app-shell';
 import { plural } from '../format';
 import { RunErrorNote } from './live-result';
@@ -16,6 +16,37 @@ import { RunErrorNote } from './live-result';
 function estimate(trips: number): string {
   const mins = Math.max(1, Math.ceil((trips * 15) / 6 / 60));
   return `about ${mins} min`;
+}
+
+type CheckState = boolean | 'mixed';
+
+/** Visual checkbox square (true / false / mixed). */
+function CheckMark({ state, className }: { state: CheckState; className?: string }) {
+  const on = state !== false;
+  return (
+    <span
+      aria-hidden
+      className={cn('flex size-5 shrink-0 items-center justify-center rounded-[6px] border', on ? 'border-brand-500 bg-brand-500 text-on-brand' : 'border-ink-300 bg-surface text-transparent', className)}
+    >
+      {state === 'mixed' ? <Minus size={14} strokeWidth={2.5} /> : <Check size={14} strokeWidth={2.5} />}
+    </span>
+  );
+}
+
+/** Tri-state checkbox control. */
+function CheckBox({ state, label, onToggle }: { state: CheckState; label: string; onToggle: () => void }) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={state}
+      aria-label={label}
+      onClick={onToggle}
+      className="shrink-0 cursor-pointer rounded-[6px] outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+    >
+      <CheckMark state={state} />
+    </button>
+  );
 }
 
 /** Pencil "42 Plan a run" (q582I): choose queries, assistants, attempts, then start. Rendered as page content on /runs/new. */
@@ -28,6 +59,7 @@ export function PlanRunForm() {
   const [queryIds, setQueryIds] = useState<string[] | null>(null);
   const [assistants, setAssistants] = useState<Assistant[] | null>(null);
   const [attempts, setAttempts] = useState<number | null>(null);
+  const [openIds, setOpenIds] = useState<string[] | null>(null);
   const [label, setLabel] = useState('');
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -36,6 +68,9 @@ export function PlanRunForm() {
   const allQ = useMemo(() => s?.queries.map((q) => q.id) ?? [], [s]);
   const enabledA = useMemo(() => s?.assistants.filter((a) => a.enabled && a.keyPresent).map((a) => a.id) ?? [], [s]);
   const selQ = queryIds ?? allQ;
+  // null = untouched: only the first product with queries starts expanded
+  const firstP = s?.products.find((p) => s.queries.some((q) => q.productId === p.id))?.id;
+  const openP = openIds ?? (firstP ? [firstP] : []);
   const selA = assistants ?? enabledA;
   const nAttempts = attempts ?? settings.data?.runDefaults.attempts ?? 3;
   const trips = selQ.length * selA.length * nAttempts;
@@ -97,45 +132,68 @@ export function PlanRunForm() {
                   {selQ.length === allQ.length ? 'Clear all' : 'Select all'} · {selQ.length} of {allQ.length}
                 </button>
               </div>
-              {s.products.map((p) => {
-                const qs = s.queries.filter((q) => q.productId === p.id);
-                if (!qs.length) return null;
-                const allOn = qs.every((q) => selQ.includes(q.id));
-                return (
-                  <div key={p.id} className="flex items-center gap-3 rounded-inner bg-surface-sunken px-4 py-3">
-                    <button
-                      type="button"
-                      role="checkbox"
-                      aria-checked={allOn}
-                      aria-label={`All ${p.code} queries`}
-                      onClick={() => setQueryIds(allOn ? selQ.filter((id) => !qs.some((q) => q.id === id)) : [...new Set([...selQ, ...qs.map((q) => q.id)])])}
-                      className={cn('flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-[6px] border', allOn ? 'border-brand-500 bg-brand-500 text-on-brand' : 'border-ink-300 bg-surface text-transparent')}
-                    >
-                      <Check size={14} strokeWidth={2.5} />
-                    </button>
-                    <span className="type-body-strong text-ink-900">{p.code}</span>
-                    <span className="type-small whitespace-nowrap text-ink-500">{qs.length} {qs.length === 1 ? 'query' : 'queries'}</span>
-                    <span className="min-w-0 flex-1 truncate text-[13px] leading-5 font-semibold text-ink-700" title={p.name}>{p.name}</span>
-                    <span className="flex flex-wrap justify-end gap-1">
-                      {qs.map((q) => (
+              <div className="flex flex-col gap-2">
+                {s.products.map((p) => {
+                  const qs = s.queries.filter((q) => q.productId === p.id);
+                  if (!qs.length) return null;
+                  const nOn = qs.filter((q) => selQ.includes(q.id)).length;
+                  const state: CheckState = nOn === 0 ? false : nOn === qs.length ? true : 'mixed';
+                  const expanded = openP.includes(p.id);
+                  const bodyId = `plan-q-${p.id}`;
+                  return (
+                    <div key={p.id} className="overflow-hidden rounded-inner bg-surface-sunken">
+                      <div className="flex items-center gap-3 px-4 py-3">
+                        <CheckBox
+                          state={state}
+                          label={`All ${p.code} queries`}
+                          onToggle={() => setQueryIds(state === true ? selQ.filter((id) => !qs.some((q) => q.id === id)) : [...new Set([...selQ, ...qs.map((q) => q.id)])])}
+                        />
                         <button
-                          key={q.id}
                           type="button"
-                          title={q.text}
-                          aria-pressed={selQ.includes(q.id)}
-                          onClick={() => setQueryIds(toggle(selQ, q.id))}
-                          className={cn(
-                            'h-7 cursor-pointer rounded-pill border px-2.5 text-[12px] font-semibold transition-colors',
-                            selQ.includes(q.id) ? 'border-ink-200 bg-surface text-ink-900' : 'border-dashed border-ink-300 bg-transparent text-ink-400',
-                          )}
+                          aria-expanded={expanded}
+                          aria-controls={bodyId}
+                          onClick={() => setOpenIds(expanded ? openP.filter((id) => id !== p.id) : [...openP, p.id])}
+                          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-[6px] text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
                         >
-                          {q.code}
+                          <span className="type-body-strong text-ink-900">{p.code}</span>
+                          <span className="min-w-0 flex-1 truncate text-[13px] leading-5 font-semibold text-ink-700" title={p.name}>{p.name}</span>
+                          <span className="type-small whitespace-nowrap text-ink-500">{nOn} of {qs.length} selected</span>
+                          <ChevronDown aria-hidden size={18} strokeWidth={ICON_STROKE} className={cn('shrink-0 text-ink-500 transition-transform', expanded && 'rotate-180')} />
                         </button>
-                      ))}
-                    </span>
-                  </div>
-                );
-              })}
+                      </div>
+                      {expanded && (
+                        <ul id={bodyId} className="flex flex-col gap-1 border-t border-ink-200 p-2">
+                          {qs.map((q) => {
+                            const on = selQ.includes(q.id);
+                            return (
+                              <li key={q.id}>
+                                <button
+                                  type="button"
+                                  role="checkbox"
+                                  aria-checked={on}
+                                  onClick={() => setQueryIds(toggle(selQ, q.id))}
+                                  className="flex w-full cursor-pointer items-start gap-3 rounded-[8px] px-2 py-2.5 text-left outline-none hover:bg-surface focus-visible:ring-2 focus-visible:ring-brand-500"
+                                >
+                                  <CheckMark state={on} className="mt-0.5" />
+                                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                                    <span className={cn('text-[14px] leading-5 font-medium', on ? 'text-ink-900' : 'text-ink-500')}>
+                                      <span className="mr-2 text-[12px] font-semibold text-ink-400">{q.code}</span>
+                                      {q.text}
+                                    </span>
+                                    <span className="text-[12px] leading-4 text-ink-500">
+                                      {formatInr(q.budgetInr)} · {q.deadlineDays === 0 ? 'Same day' : plural(q.deadlineDays, 'day')} · {q.city}
+                                    </span>
+                                  </span>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </section>
 
             <section className="flex flex-col gap-3">

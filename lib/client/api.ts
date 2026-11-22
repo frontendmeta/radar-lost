@@ -34,6 +34,7 @@ import type {
   Trace,
   Win,
 } from '@/lib/api-types';
+import type { QueryClient } from '@tanstack/react-query';
 import { MockError, mockResponse } from './mocks';
 
 // ---------- errors ----------
@@ -142,7 +143,22 @@ async function serveMock<T>(method: Method, path: string, body: unknown, why: st
   return res as T;
 }
 
+// ---------- query cache hook-up ----------
+
+let queryClient: QueryClient | null = null;
+/** Called by <Providers> so successful writes can refresh every cached read. */
+export function setQueryClient(qc: QueryClient | null) {
+  queryClient = qc;
+}
+
+/** Every call goes through here; any successful write invalidates all cached reads. */
 export async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
+  const res = await send<T>(method, path, body);
+  if (method !== 'GET') void queryClient?.invalidateQueries();
+  return res;
+}
+
+async function send<T>(method: Method, path: string, body?: unknown): Promise<T> {
   if (mocksForced()) return serveMock<T>(method, path, body, 'mock mode');
 
   let res: Response;

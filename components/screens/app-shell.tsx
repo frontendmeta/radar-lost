@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { Sparkles } from 'lucide-react';
 import { api } from '@/lib/client/api';
-import { useApi, useUsingMocks } from '@/lib/client/hooks';
+import { useApi, usePrefetchCommon, useUsingMocks } from '@/lib/client/hooks';
 import { Button, Dock, HeroBand, TopBar as TopBarView, cn, type WorkerStatus } from './ui';
 import { LiveTestDialog } from './live-test';
 
@@ -17,6 +17,7 @@ function initials(name: string | null | undefined, email: string | undefined) {
 
 /** Pencil: Top bar (JeCO7), wired to /api/health and /api/me. */
 export function TopBar() {
+  usePrefetchCommon();
   const health = useApi('health', api.health);
   const me = useApi('me', api.me);
   const usingMocks = useUsingMocks();

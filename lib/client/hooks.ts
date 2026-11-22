@@ -1,7 +1,7 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { RunStatus } from '@/lib/api-types';
+import { useCallback, useEffect, useSyncExternalStore } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isTerminal, mockStore } from './api';
 
 export interface Resource<T> {
@@ -13,77 +13,67 @@ export interface Resource<T> {
   reload: () => void;
 }
 
-type Slot<T> = { key: string | null; data?: T; error?: ApiError | Error };
-
 /**
  * Fetch on mount / whenever `key` changes. Pass key=null to skip.
- * Keeps the last data while a new key loads, so lens changes don't flash.
+ * Backed by TanStack Query: results are cached per key (shared across screens), and the
+ * previous data stays visible while a new key loads, so lens changes don't flash.
  */
 export function useApi<T>(key: string | null, fetcher: () => Promise<T>): Resource<T> {
-  const [slot, setSlot] = useState<Slot<T>>({ key: null });
-  const [nonce, setNonce] = useState(0);
-  const fetcherRef = useRef(fetcher);
-  useEffect(() => {
-    fetcherRef.current = fetcher;
+  const q = useQuery<T, ApiError | Error>({
+    queryKey: [key],
+    queryFn: () => fetcher(),
+    enabled: key !== null,
   });
-
-  useEffect(() => {
-    if (key === null) return;
-    let cancelled = false;
-    fetcherRef.current().then(
-      (data) => !cancelled && setSlot({ key, data }),
-      (error: unknown) =>
-        !cancelled && setSlot((s) => ({ key, data: s.data, error: error instanceof Error ? error : new Error(String(error)) })),
-    );
-    return () => {
-      cancelled = true;
-    };
-  }, [key, nonce]);
-
-  const reload = useCallback(() => setNonce((n) => n + 1), []);
-  const fresh = slot.key === key;
+  const { refetch } = q;
+  const enabled = key !== null;
+  const reload = useCallback(() => {
+    if (enabled) void refetch();
+  }, [enabled, refetch]);
   return {
-    data: slot.data,
-    error: fresh ? slot.error : undefined,
-    loading: key !== null && !fresh,
+    data: q.data,
+    error: q.error ?? undefined,
+    loading: enabled && (q.isPending || q.isPlaceholderData),
     reload,
   };
 }
 
 /** Poll a run every `intervalMs` (2 s) until it reaches a terminal state. */
 export function useRunPolling(runId: string | null | undefined, intervalMs = 2000) {
-  const [state, setState] = useState<{ id: string | null; run?: RunStatus; error?: ApiError | Error }>({ id: null });
-
-  useEffect(() => {
-    if (!runId) return;
-    let cancelled = false;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const tick = async () => {
-      try {
-        const run = await api.run(runId);
-        if (cancelled) return;
-        setState({ id: runId, run });
-        if (!isTerminal(run.status)) timer = setTimeout(tick, intervalMs);
-      } catch (e) {
-        if (cancelled) return;
-        setState((s) => ({ id: runId, run: s.id === runId ? s.run : undefined, error: e instanceof Error ? e : new Error(String(e)) }));
-        timer = setTimeout(tick, intervalMs * 2);
-      }
-    };
-    tick();
-    return () => {
-      cancelled = true;
-      if (timer) clearTimeout(timer);
-    };
-  }, [runId, intervalMs]);
-
-  const fresh = state.id === runId;
-  const run = fresh ? state.run : undefined;
+  const q = useQuery({
+    // Same key as useApi(`run:${id}`), so the polled status feeds every screen showing this run.
+    queryKey: [runId ? `run:${runId}` : null],
+    queryFn: () => api.run(runId!),
+    enabled: !!runId,
+    staleTime: (query) => (query.state.data && isTerminal(query.state.data.status) ? 60_000 : 0),
+    refetchInterval: (query) => {
+      const d = query.state.data;
+      if (d && isTerminal(d.status)) return false;
+      return query.state.status === 'error' ? intervalMs * 2 : intervalMs;
+    },
+  });
+  const run = runId && !q.isPlaceholderData ? q.data : undefined;
   return {
     run,
-    error: fresh ? state.error : undefined,
+    error: runId && !q.isPlaceholderData ? (q.error ?? undefined) : undefined,
     done: run ? isTerminal(run.status) : false,
   };
+}
+
+/** Warm the cache with the reads almost every screen needs (same keys the screens use). */
+export function usePrefetchCommon() {
+  const qc = useQueryClient();
+  useEffect(() => {
+    const reads: [string, () => Promise<unknown>][] = [
+      ['me', api.me],
+      ['setup', api.setup],
+      ['health', api.health],
+      ['runs', () => api.runs()],
+      ['lens-options', api.lensOptions],
+      ['settings', api.settings],
+      ['settings-keys', api.keys],
+    ];
+    for (const [key, fn] of reads) void qc.prefetchQuery({ queryKey: [key], queryFn: fn });
+  }, [qc]);
 }
 
 /** True once any response in this tab was served from mocks. */

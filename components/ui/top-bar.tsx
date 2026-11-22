@@ -18,6 +18,10 @@ export interface TopBarProps {
   /** Avatar initials, e.g. "PV". */
   userInitials?: string | null;
   userAvatarUrl?: string | null;
+  /** Shown in the account menu. */
+  userEmail?: string | null;
+  /** Account menu "Sign out" target. */
+  signOutHref?: string;
   /** Slot between worker status and avatar, e.g. a "Live test" secondary button. */
   actions?: ReactNode;
   /** Wordmark link target. */
@@ -31,6 +35,8 @@ export function TopBar({
   workerLabel,
   userInitials,
   userAvatarUrl,
+  userEmail,
+  signOutHref = "/logout",
   actions,
   homeHref = "/",
   className,
@@ -53,18 +59,32 @@ export function TopBar({
           <span className="type-small text-ink-500">{workerLabel ?? w.text}</span>
         </span>
         {actions}
-        <span
-          className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-pill bg-brand-100 text-[13px] leading-none font-bold text-brand-700"
-          aria-label="Your account"
-          role="img"
-        >
-          {userAvatarUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={userAvatarUrl} alt="" className="size-full object-cover" />
-          ) : (
-            (userInitials ?? "").slice(0, 2).toUpperCase() || "·"
-          )}
-        </span>
+        <details className="relative">
+          <summary
+            className="flex size-9 shrink-0 cursor-pointer list-none items-center justify-center overflow-hidden rounded-pill bg-brand-100 text-[13px] leading-none font-bold text-brand-700 outline-none focus-visible:ring-2 focus-visible:ring-brand-500 [&::-webkit-details-marker]:hidden"
+            aria-label="Account menu"
+          >
+            {userAvatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={userAvatarUrl} alt="" className="size-full object-cover" />
+            ) : (
+              (userInitials ?? "").slice(0, 2).toUpperCase() || "·"
+            )}
+          </summary>
+          <div className="absolute right-0 z-50 mt-2 w-60 rounded-inner border border-line bg-surface p-2 shadow-overlay">
+            {userEmail ? (
+              <p className="truncate px-3 py-2 type-small text-ink-500" title={userEmail}>
+                {userEmail}
+              </p>
+            ) : null}
+            <a
+              href={signOutHref}
+              className="block rounded-input px-3 py-2 type-body-strong text-ink-900 hover:bg-surface-sunken"
+            >
+              Sign out
+            </a>
+          </div>
+        </details>
       </div>
     </header>
   );

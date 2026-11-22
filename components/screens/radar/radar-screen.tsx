@@ -9,7 +9,6 @@ import { useApi } from '@/lib/client/hooks';
 import { useLens } from '@/lib/client/lens';
 import { AppShell, ErrorNote, Skeleton } from '../app-shell';
 import { runDateLabel, runSubtitle } from '../format';
-import { PlanRunDialog } from '../runs/plan-run-dialog';
 import { TraceDrawer } from '../trace/trace-drawer';
 import { Button, EmptyState, ICON_STROKE } from '../ui';
 import { LensSentence } from './lens-sentence';
@@ -69,7 +68,6 @@ export function RadarScreen({ initialTrace }: { initialTrace?: string }) {
   const heroTrace = useApi(heroSale ? `trace:${heroSale.taskId}` : null, () => api.trace(heroSale!.taskId));
 
   const [regenerating, setRegenerating] = useState(false);
-  const [planOpen, setPlanOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const openTrace = useCallback((taskId: string) => setParams({ trace: taskId }), [setParams]);
@@ -112,7 +110,7 @@ export function RadarScreen({ initialTrace }: { initialTrace?: string }) {
           </div>
           <div className="flex items-center gap-3">
             {!noRuns && <Button variant="secondary" icon={Download} onClick={() => window.print()}>Export</Button>}
-            <Button icon={Rocket} onClick={() => setPlanOpen(true)}>Run AI shoppers</Button>
+            <Button icon={Rocket} href="/runs/new">Run AI shoppers</Button>
           </div>
         </div>
         <div className={noRuns ? 'pointer-events-none opacity-50' : undefined} aria-disabled={noRuns || undefined}>
@@ -127,7 +125,7 @@ export function RadarScreen({ initialTrace }: { initialTrace?: string }) {
           <EmptyState
             title="No AI shoppers sent yet"
             body={`Send ChatGPT, Claude and Gemini to shop your ${queryCount} questions.`}
-            action={<Button icon={Rocket} onClick={() => setPlanOpen(true)}>Run AI shoppers</Button>}
+            action={<Button icon={Rocket} href="/runs/new">Run AI shoppers</Button>}
           />
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {EMPTY_STEPS.map(({ icon: Icon, title, body }) => (
@@ -212,7 +210,6 @@ export function RadarScreen({ initialTrace }: { initialTrace?: string }) {
           onNavigate={openTrace}
         />
       )}
-      {planOpen && <PlanRunDialog onClose={() => setPlanOpen(false)} />}
     </AppShell>
   );
 }

@@ -34,6 +34,7 @@ export function TopBar() {
         workerLabel={workerLabel}
         userInitials={initials(me.data?.name, me.data?.email)}
         userAvatarUrl={me.data?.avatarUrl ?? null}
+        userEmail={me.data?.email ?? null}
         actions={
           <>
             {usingMocks && (

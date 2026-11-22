@@ -9,7 +9,6 @@ import { AppShell, ErrorNote, Skeleton } from '../app-shell';
 import { runDateLabel } from '../format';
 import { Button, EmptyState, RunRow, Segmented } from '../ui';
 import { LiveTestDialog } from '../live-test';
-import { PlanRunDialog } from './plan-run-dialog';
 
 type StatusFilter = 'all' | 'running' | 'done' | 'partial' | 'failed';
 type TriggerFilter = 'any' | 'manual' | 'live';
@@ -38,7 +37,6 @@ function meta(r: RunListItem): string {
 export function RunsScreen() {
   const [status, setStatus] = useState<StatusFilter>('all');
   const [trigger, setTrigger] = useState<TriggerFilter>('any');
-  const [planOpen, setPlanOpen] = useState(false);
   const [liveOpen, setLiveOpen] = useState(false);
   const runs = useApi('runs', () => api.runs());
   const { reload } = runs;
@@ -72,7 +70,7 @@ export function RunsScreen() {
         </div>
         <div className="flex items-center gap-3">
           <Button variant="secondary" icon={Sparkles} onClick={() => setLiveOpen(true)}>Live test</Button>
-          <Button icon={Rocket} onClick={() => setPlanOpen(true)}>Run AI shoppers</Button>
+          <Button icon={Rocket} href="/runs/new">Run AI shoppers</Button>
         </div>
       </div>
 
@@ -115,7 +113,7 @@ export function RunsScreen() {
         <EmptyState
           title="No runs yet"
           body="Send the AI shoppers out to see how often ChatGPT, Claude and Gemini pick your brand."
-          action={<Button icon={Rocket} onClick={() => setPlanOpen(true)}>Run AI shoppers</Button>}
+          action={<Button icon={Rocket} href="/runs/new">Run AI shoppers</Button>}
         />
       ) : groups.length === 0 ? (
         <p className="rounded-card bg-surface px-6 py-8 text-center type-small text-ink-500 elevation-card">No runs match these filters.</p>
@@ -149,7 +147,6 @@ export function RunsScreen() {
         </div>
       )}
 
-      {planOpen && <PlanRunDialog onClose={() => setPlanOpen(false)} />}
       {liveOpen && (
         <LiveTestDialog
           onClose={() => {

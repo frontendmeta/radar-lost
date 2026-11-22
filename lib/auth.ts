@@ -30,11 +30,15 @@ export async function sessionClient() {
 export async function requireUser(): Promise<SessionUser> {
   if (authDisabled()) return DEMO_USER;
   const supabase = await sessionClient();
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user?.email) throw new HttpError(401, 'unauthenticated', 'Sign in required');
-  const email = data.user.email.toLowerCase();
+  // getClaims() verifies the session JWT locally against the project's cached ES256 public keys,
+  // so a request no longer waits on a round trip to Supabase Auth (getUser() made one every call).
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  const rawEmail = typeof claims?.email === 'string' ? claims.email : '';
+  if (error || !claims?.sub || !rawEmail) throw new HttpError(401, 'unauthenticated', 'Sign in required');
+  const email = rawEmail.toLowerCase();
   const allowed = (process.env.ALLOWED_EMAILS ?? '').split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
   if (allowed.length && !allowed.includes(email)) throw new HttpError(403, 'not_allowed', `${email} is not allowed`);
-  const meta = data.user.user_metadata ?? {};
-  return { id: data.user.id, email, name: meta.full_name ?? meta.name ?? null, avatarUrl: meta.avatar_url ?? meta.picture ?? null };
+  const meta = (claims.user_metadata ?? {}) as Record<string, string | undefined>;
+  return { id: claims.sub, email, name: meta.full_name ?? meta.name ?? null, avatarUrl: meta.avatar_url ?? meta.picture ?? null };
 }

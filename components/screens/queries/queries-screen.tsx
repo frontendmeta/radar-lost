@@ -334,8 +334,8 @@ export function QueriesScreen() {
                   </div>
 
                   {/* Rows */}
-                  {!queries.data ? (
-                    Array.from({ length: 6 }, (_, i) => <RowSkeleton key={i} first={i === 0} slots={assistants.length} />)
+                  {!queries.data || queries.loading ? (
+                    Array.from({ length: Math.min(visible.length || 6, 40) }, (_, i) => <RowSkeleton key={i} first={i === 0} slots={assistants.length} />)
                   ) : queries.data.length === 0 ? (
                     <div className="flex flex-col items-center gap-2 px-6 py-16 text-center">
                       <p className="type-h3 text-ink-900">No answers in this view</p>
@@ -355,7 +355,7 @@ export function QueriesScreen() {
                       </Button>
                     </div>
                   ) : (
-                    <div className={cn('flex flex-col transition-opacity', queries.loading && 'opacity-60')}>
+                    <div className="flex flex-col">
                       {visible.map(({ row, winner }, i) => (
                         <button
                           key={row.queryId}

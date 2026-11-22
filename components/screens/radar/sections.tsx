@@ -11,6 +11,42 @@ import { plural } from '../format';
 
 const pts = (gap: number | null | undefined) => (typeof gap === 'number' && Number.isFinite(gap) ? Math.round(gap * 100) : null);
 
+// ---------------------------------------------------------------- loading skeletons
+
+/** Varied name-bar widths so skeleton rows don't look stamped. */
+const NAME_W = ['w-[74%]', 'w-[58%]', 'w-[80%]', 'w-[52%]', 'w-[66%]', 'w-[62%]', 'w-[76%]', 'w-[56%]'];
+const range = (n: number) => Array.from({ length: n }, (_, i) => i);
+
+/** Shimmer stand-in for BarRow / ReasonRow lists: mark · name · track · value, 44 px rows. */
+function BarRowsSkeleton({ rows, variant = 'bar' }: { rows: number; variant?: 'bar' | 'reason' }) {
+  const reason = variant === 'reason';
+  return (
+    <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-1">
+      {range(rows).map((i) => (
+        <div key={i} className={cn('flex h-11 items-center px-3', reason ? 'gap-3.5' : 'gap-4')}>
+          <div className={cn('flex shrink-0 items-center', reason ? 'w-[calc(32px+14px+200px)] gap-3.5' : 'w-[150px] gap-2')}>
+            <Skeleton className={cn('shrink-0 rounded-pill!', reason ? 'size-8' : 'size-5')} />
+            <Skeleton className={cn('h-3.5', NAME_W[i % NAME_W.length])} />
+          </div>
+          <Skeleton className="h-3 min-w-0 flex-1 rounded-bar!" />
+          <div className="flex w-20 shrink-0 justify-end"><Skeleton className="h-3.5 w-14" /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Label bar + big number bar + caption bar, the shape of a StatBlock. */
+function StatSkeleton() {
+  return (
+    <div className="flex min-w-0 flex-col gap-2.5">
+      <Skeleton className="h-3.5 w-16" />
+      <Skeleton className="h-10 w-24 max-w-full" />
+      <Skeleton className="h-3.5 w-[80%]" />
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- funnel
 
 /** Three bars sized by rate, joined by soft ribbons (Pencil: Funnel chart). */
@@ -58,13 +94,16 @@ export function FunnelCard({ summary, loading, error, onRetry }: { summary?: Sum
       <CardHeader title={`The AI shopping funnel for ${name}`} sub={`How often AI found, named and picked ${name} when it shopped`} />
       {error && !summary ? (
         <ErrorNote error={error} onRetry={onRetry} />
-      ) : !summary ? (
-        <div className="flex flex-col gap-6">
-          <div className="grid grid-cols-3 gap-6">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-[100px]" />)}</div>
-          <Skeleton className="h-[144px]" />
+      ) : !summary || loading ? (
+        <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-7">
+          <div className="grid grid-cols-3 gap-6">{range(3).map((i) => <StatSkeleton key={i} />)}</div>
+          <div className="flex flex-col items-center gap-3">
+            <Skeleton className="aspect-[728/144] w-full" />
+            <Skeleton className="h-9 w-72 max-w-full rounded-pill!" />
+          </div>
         </div>
       ) : (
-        <div className={cn('flex flex-col gap-7 transition-opacity', loading && 'opacity-60')}>
+        <div className="flex flex-col gap-7">
           <div className="grid grid-cols-3 gap-6">
             <StatBlock label="Found" tone="ink" value={summary.found.rate} delta={cmp ? cmp.foundDelta : undefined} caption={`${formatCount(summary.found.n)} of ${formatCount(summary.found.of)} searched answers`} className="[&>div:first-child>span:first-child]:bg-brand-300" />
             <StatBlock label="Named" tone="brand" value={summary.mentioned.rate} delta={cmp ? cmp.mentionedDelta : undefined} caption={`${formatCount(summary.mentioned.n)} of ${formatCount(summary.mentioned.of)} answers`} className="[&>div:first-child>span:first-child]:bg-brand-400" />
@@ -221,12 +260,12 @@ export function WinsCard({
       />
       {error && !wins ? (
         <ErrorNote error={error} onRetry={onRetry} />
-      ) : !wins ? (
-        <div className="flex flex-col gap-2">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-11" />)}</div>
+      ) : !wins || loading ? (
+        <BarRowsSkeleton rows={wins?.length || 6} />
       ) : wins.length === 0 ? (
         <p className="type-small text-ink-500">No picks yet.</p>
       ) : (
-        <div className={cn('flex flex-col gap-1 transition-opacity', loading && 'opacity-60')}>
+        <div className="flex flex-col gap-1">
           {wins.map((w) => {
             const color = w.isFocus ? 'var(--color-brand-500)' : w.isPrimary ? 'var(--color-brand-300)' : w.brandId === null ? 'var(--color-comp-other)' : competitorColor(rank++);
             return (
@@ -263,12 +302,12 @@ export function LossReasonsCard({
       />
       {error && !rows ? (
         <ErrorNote error={error} onRetry={onRetry} />
-      ) : !rows ? (
-        <div className="flex flex-col gap-2">{[0, 1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-11" />)}</div>
+      ) : !rows || loading ? (
+        <BarRowsSkeleton rows={rows?.length || 6} variant="reason" />
       ) : rows.length === 0 ? (
         <p className="type-small text-ink-500">No losses in this view.</p>
       ) : (
-        <div className={cn('flex flex-col gap-1 transition-opacity', loading && 'opacity-60')}>
+        <div className="flex flex-col gap-1">
           {rows.map((r) => <ReasonRow key={r.reason} reason={r.reason} n={r.n} share={r.share} />)}
         </div>
       )}
@@ -297,10 +336,29 @@ export function ByAssistantSection({ rows, focusName, loading, error, onRetry }:
       </div>
       {error && !rows ? (
         <ErrorNote error={error} onRetry={onRetry} />
-      ) : !rows ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-[250px] rounded-card" />)}</div>
+      ) : !rows || loading ? (
+        <div aria-busy="true" aria-label="Loading" className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {range(rows?.length || 3).map((i) => (
+            <Card key={i} pad="sm" className="gap-5">
+              <div className="flex h-7 items-center gap-2">
+                <Skeleton className="size-6 rounded-pill!" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex gap-2">
+                {range(3).map((j) => (
+                  <div key={j} className="flex flex-1 flex-col gap-1.5 rounded-input px-3 py-2.5">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-7 w-14" />
+                  </div>
+                ))}
+              </div>
+              <Skeleton className="h-[21px] w-full" />
+              <Skeleton className="h-4 w-[70%]" />
+            </Card>
+          ))}
+        </div>
       ) : (
-        <div className={cn('grid grid-cols-1 gap-6 transition-opacity md:grid-cols-3', loading && 'opacity-60')}>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {rows.map((r) => (
             <Card key={r.assistant} pad="sm" className="gap-5">
               <div className="flex items-center justify-between">
@@ -349,10 +407,28 @@ export function SourcesCard({ data, answers, focusName, loading, error, onRetry 
       <CardHeader title="Where AI shopped" sub={data ? `${formatCount(total)} pages read${answers != null ? ` across ${plural(answers, 'answer')}` : ''}` : 'Pages the AI read'} />
       {error && !data ? (
         <ErrorNote error={error} onRetry={onRetry} />
-      ) : !data ? (
-        <div className="flex flex-col gap-3"><Skeleton className="h-4" />{[0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}</div>
+      ) : !data || loading ? (
+        <div aria-busy="true" aria-label="Loading" className="flex flex-col gap-5">
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-full rounded-pill!" />
+            <div className="flex flex-wrap gap-x-5 gap-y-1">{range(5).map((i) => <Skeleton key={i} className="h-5 w-24" />)}</div>
+          </div>
+          <div className="flex flex-col">
+            <div className="flex h-9 items-center justify-between border-b border-ink-200"><Skeleton className="h-3 w-20" /><Skeleton className="h-3 w-32" /></div>
+            {range(Math.min(data?.topDomains.length || 6, 8)).map((i) => (
+              <div key={i} className="flex h-12 items-center gap-3 border-b border-ink-100 last:border-0">
+                <Skeleton className="size-7 shrink-0 rounded-pill!" />
+                <Skeleton className={cn('h-4 max-w-[180px]', NAME_W[i % NAME_W.length])} />
+                <Skeleton className="h-6 w-20 shrink-0 rounded-pill!" />
+                <span className="flex-1" />
+                <Skeleton className="h-4 w-10 shrink-0" />
+                <Skeleton className="ml-6 h-4 w-28 shrink-0" />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
-        <div className={cn('flex flex-col gap-5 transition-opacity', loading && 'opacity-60')}>
+        <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-3">
             <div className="flex h-4 w-full gap-1 overflow-hidden rounded-pill">
               {data.byType.filter((t) => t.n > 0).map((t) => (
@@ -432,12 +508,28 @@ export function PickChannelsCard({ data, focusName, focusDomains, marketplaces =
   return (
     <Card className="min-w-0 flex-[486] gap-5">
       <CardHeader title={`Where ${focusName} got picked`} sub={total ? `The page AI bought from, for ${plural(total, 'pick')}` : 'The page AI bought from'} />
-      {!data ? (
-        <Skeleton className="h-[260px]" />
+      {!data || loading ? (
+        <div aria-busy="true" aria-label="Loading" className="flex flex-1 flex-col gap-5">
+          <div className="flex items-center gap-8">
+            <Skeleton className="size-[180px] shrink-0 rounded-pill!" />
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
+              {range(channels.length || 4).map((i) => (
+                <div key={i} className="flex items-start gap-2.5">
+                  <Skeleton className="mt-1.5 size-2.5 shrink-0 rounded-pill!" />
+                  <div className="flex flex-1 flex-col gap-1.5">
+                    <Skeleton className="h-4 w-[70%]" />
+                    <Skeleton className="h-3 w-[45%]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Skeleton className="mt-auto h-14 w-full" />
+        </div>
       ) : total === 0 ? (
         <p className="type-small text-ink-500">AI hasn&apos;t picked {focusName} in this view yet.</p>
       ) : (
-        <div className={cn('flex flex-1 flex-col gap-5 transition-opacity', loading && 'opacity-60')}>
+        <div className="flex flex-1 flex-col gap-5">
           <div className="flex items-center gap-8">
             <div className="relative size-[180px] shrink-0">
               <svg viewBox="0 0 180 180" className="size-full -rotate-90">

@@ -19,14 +19,12 @@ import type {
   Marketplace,
   Me,
   Product,
-  ProviderKeyInfo,
   Query,
   QueryRow,
   RunDefaults,
   RunListItem,
   RunState,
   RunStatus,
-  SaveKeyResult,
   SettingsBundle,
   Setup,
   SourcesBreakdown,
@@ -283,12 +281,6 @@ export const api = {
   patchAssistant: (id: Assistant, body: { enabled?: boolean; model?: string | null }) =>
     patch<AssistantInfo>(`/api/settings/assistants/${enc(id)}`, body),
 
-  // Provider API keys: metadata only, the key itself is never returned.
-  keys: () => get<ProviderKeyInfo[]>('/api/settings/keys'),
-  /** Checks the key with the provider (unless verify=false), then stores it encrypted. 400 key_invalid / bad_key, field 'apiKey'. */
-  saveKey: (assistant: Assistant, apiKey: string, verify = true) =>
-    put<SaveKeyResult>(`/api/settings/keys/${enc(assistant)}`, { apiKey, verify }),
-  deleteKey: (assistant: Assistant) => del<Ok>(`/api/settings/keys/${enc(assistant)}`),
 };
 
 export interface BrandInput { name: string; aliases: string[]; domains: string[] }

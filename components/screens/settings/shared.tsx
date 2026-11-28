@@ -17,7 +17,7 @@ const CODE_COPY: Record<string, string> = {
   primary_locked: "Your own brand can't be archived.",
   product_in_use: 'Active queries use this product. Archive or move them first.',
   bad_query: 'Text 10–500 characters, budget ₹100–₹1,00,000, deadline 0–14 days, and an active product.',
-  key_missing: 'Add an API key for this assistant before turning it on.',
+  key_missing: "This assistant isn't connected right now, so it can't be turned on.",
   bad_attempts: 'Attempts must be between 1 and 5.',
   key_invalid: 'The provider rejected this key. Check it and try again.',
   bad_key: 'The key looks malformed (20–400 characters, no spaces).',

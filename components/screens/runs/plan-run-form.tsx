@@ -1,13 +1,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Check, ChevronDown, KeyRound, Minus, Rocket } from 'lucide-react';
+import { Check, ChevronDown, Minus, Rocket } from 'lucide-react';
 import type { Assistant } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
 import { useApi } from '@/lib/client/hooks';
-import { ASSISTANT_LABEL, AssistantBadge, Banner, Button, ICON_STROKE, Input, Stepper, Toggle, cn, formatInr } from '../ui';
+import { ASSISTANT_LABEL, AssistantBadge, Button, ICON_STROKE, Input, Stepper, Toggle, cn, formatInr } from '../ui';
 import { ErrorNote, Skeleton } from '../app-shell';
 import { plural } from '../format';
 import { RunErrorNote } from './live-result';
@@ -104,14 +103,9 @@ export function PlanRunForm() {
   return (
     <div className="flex flex-col gap-6">
       {noKeys && (
-        <Banner
-          tone="error"
-          icon={KeyRound}
-          spin={false}
-          action={<Button size="sm" href="/settings/keys" icon={ArrowRight}>Add keys</Button>}
-        >
-          Add your API keys in Settings to send shoppers
-        </Banner>
+        <p className="rounded-inner bg-surface-sunken px-5 py-4 type-body text-ink-700">
+          No AI assistant is connected right now, so new runs are paused.
+        </p>
       )}
 
       <div className="flex flex-col gap-8 rounded-card bg-surface p-8 elevation-card">
@@ -212,21 +206,9 @@ export function PlanRunForm() {
                         <p className="type-body-strong truncate text-ink-900">{a.label || ASSISTANT_LABEL[a.id]}</p>
                         <p className="type-small truncate text-ink-500">{a.model ?? 'Default model'}</p>
                       </div>
-                      {a.keyPresent ? (
-                        <span className={cn('inline-flex h-6 w-fit max-w-full items-center gap-1 rounded-pill px-2 text-[12px] font-semibold whitespace-nowrap', a.enabled ? 'bg-picked-50 text-picked-700' : 'bg-ink-100 text-ink-500')}>
-                          <KeyRound aria-hidden size={14} strokeWidth={ICON_STROKE} className="shrink-0" />
-                          <span className="truncate">{a.enabled ? 'Key connected' : 'Turned off in Settings'}</span>
-                        </span>
-                      ) : (
-                        <Link
-                          href="/settings/keys"
-                          className="inline-flex h-6 w-fit shrink-0 items-center gap-1 rounded-pill bg-lost-50 px-2 text-[12px] font-semibold whitespace-nowrap text-lost-700 hover:underline"
-                        >
-                          <KeyRound aria-hidden size={14} strokeWidth={ICON_STROKE} className="shrink-0" />
-                          Add key
-                          <ArrowRight aria-hidden size={12} strokeWidth={ICON_STROKE} className="shrink-0" />
-                        </Link>
-                      )}
+                      <span className={cn('inline-flex h-6 w-fit max-w-full items-center rounded-pill px-2 text-[12px] font-semibold whitespace-nowrap', usable ? 'bg-picked-50 text-picked-700' : 'bg-ink-100 text-ink-500')}>
+                        <span className="truncate">{!a.keyPresent ? 'Not connected' : a.enabled ? 'Connected' : 'Turned off in Settings'}</span>
+                      </span>
                     </div>
                   );
                 })}

@@ -1,21 +1,18 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { KeyRound, Lock } from 'lucide-react';
-import type { AssistantInfo, ProviderKeyInfo } from '@/lib/api-types';
+import type { AssistantInfo } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
-import { AssistantBadge, Button, ICON_STROKE, Input, Toggle, Tooltip, cn } from '@/components/ui';
-import { KeyChip } from './keys-panel';
+import { AssistantBadge, Button, Input, Toggle, cn } from '@/components/ui';
 import { InlineError, PanelHeader, fieldError, toFormError, type FormError, type ToastTone } from './shared';
 
 type Notify = (title: string, tone?: ToastTone) => void;
 
-function AssistantRow({ a, keyInfo, onChanged }: { a: AssistantInfo; keyInfo?: ProviderKeyInfo; onChanged: Notify }) {
+function AssistantRow({ a, onChanged }: { a: AssistantInfo; onChanged: Notify }) {
   const [model, setModel] = useState(a.model ?? '');
   const [busy, setBusy] = useState<'toggle' | 'model' | null>(null);
   const [err, setErr] = useState<FormError | null>(null);
-  const keyPresent = keyInfo?.keyPresent ?? a.keyPresent;
+  const keyPresent = a.keyPresent;
   const modelDirty = (a.model ?? '') !== model.trim();
   const locked = !a.enabled && !keyPresent;
 
@@ -49,7 +46,9 @@ function AssistantRow({ a, keyInfo, onChanged }: { a: AssistantInfo; keyInfo?: P
           <AssistantBadge assistant={a.id} disabled={!a.enabled} className="size-12 text-[15px]" />
           <div className="flex flex-col gap-1.5">
             <span className="type-h3 text-ink-900">{a.label}</span>
-            <KeyChip info={keyInfo ?? { keyPresent: a.keyPresent, source: null }} />
+            <span className={cn('type-small', keyPresent ? 'text-picked-700' : 'text-ink-500')}>
+              {keyPresent ? 'Connected' : 'Not connected'}
+            </span>
           </div>
         </div>
         <div className="flex min-w-[240px] flex-1 items-start gap-2">
@@ -68,58 +67,24 @@ function AssistantRow({ a, keyInfo, onChanged }: { a: AssistantInfo; keyInfo?: P
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          {locked ? (
-            <>
-              {toggle}
-              <Tooltip content={`Add the ${a.label} API key to turn this on`}>
-                <Link href="/settings/keys" aria-label={`Add the ${a.label} API key`} className="flex size-8 items-center justify-center rounded-pill text-ink-500 hover:bg-ink-100">
-                  <Lock aria-hidden size={16} strokeWidth={ICON_STROKE} />
-                </Link>
-              </Tooltip>
-            </>
-          ) : (
-            toggle
-          )}
-        </div>
+        <div className="flex items-center gap-2">{toggle}</div>
       </div>
-      {locked && (
-        <p className="flex flex-wrap items-center gap-2 type-small text-ink-500">
-          No key yet, so {a.label} can&apos;t go out on runs.
-          <Button href="/settings/keys" variant="ghost" size="sm" icon={KeyRound}>Add key</Button>
-        </p>
-      )}
+      {locked && <p className="type-small text-ink-500">{a.label} isn&apos;t connected right now, so it can&apos;t go out on runs.</p>}
       {err && !fieldError(err, 'model') && <InlineError>{err.message}</InlineError>}
     </li>
   );
 }
 
-/** Pencil "53 Settings – Assistants" (n4AOWA). Keys live in their own tab. */
-export function AssistantsPanel({
-  assistants, keys, keysError, onChanged,
-}: { assistants: AssistantInfo[]; keys?: ProviderKeyInfo[]; keysError?: Error; onChanged: Notify }) {
+/** Pencil "53 Settings – Assistants" (n4AOWA). */
+export function AssistantsPanel({ assistants, onChanged }: { assistants: AssistantInfo[]; onChanged: Notify }) {
   return (
     <div className="flex flex-col gap-4">
       <PanelHeader title="Assistants" sub="Which AI shoppers go out on each run" />
-      {keysError && <InlineError>Couldn&apos;t load API key status: {keysError.message}</InlineError>}
       <ul className="flex flex-col gap-4">
         {assistants.map((a) => (
-          <AssistantRow key={`${a.id}:${a.model ?? ''}`} a={a} keyInfo={keys?.find((k) => k.assistant === a.id)} onChanged={onChanged} />
+          <AssistantRow key={`${a.id}:${a.model ?? ''}`} a={a} onChanged={onChanged} />
         ))}
       </ul>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 rounded-[22px] border border-ink-200 bg-surface-sunken px-5 py-4">
-        <span className="type-label text-ink-500">When a key is missing</span>
-        <KeyChip info={{ keyPresent: false, source: null }} />
-        <span className="flex items-center gap-2">
-          <Toggle label="Locked example" checked={false} disabled />
-          <Lock aria-hidden size={16} strokeWidth={ICON_STROKE} className="text-ink-500" />
-        </span>
-        <span className="type-small text-ink-500">
-          Add the key in{' '}
-          <Link href="/settings/keys" className="font-semibold text-brand-600 hover:underline">API keys</Link>{' '}
-          to turn it on.
-        </span>
-      </div>
     </div>
   );
 }

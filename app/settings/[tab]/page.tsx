@@ -1,6 +1,6 @@
-// /settings/<tab>: brand · products · competitors · marketplaces · queries · assistants · keys · run-defaults.
+// /settings/<tab>: brand · products · competitors · marketplaces · queries · assistants · run-defaults.
 // The layout's client screen reads the segment; this page renders nothing.
-const TABS = ['brand', 'products', 'competitors', 'marketplaces', 'queries', 'assistants', 'keys', 'run-defaults'];
+const TABS = ['brand', 'products', 'competitors', 'marketplaces', 'queries', 'assistants', 'run-defaults'];
 
 export function generateStaticParams() {
   return TABS.map((tab) => ({ tab }));

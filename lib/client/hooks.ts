@@ -70,7 +70,6 @@ export function usePrefetchCommon() {
       ['runs', () => api.runs()],
       ['lens-options', api.lensOptions],
       ['settings', api.settings],
-      ['settings-keys', api.keys],
     ];
     for (const [key, fn] of reads) void qc.prefetchQuery({ queryKey: [key], queryFn: fn });
   }, [qc]);

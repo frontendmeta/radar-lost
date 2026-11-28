@@ -1,16 +1,15 @@
 'use client';
 
 import { useSelectedLayoutSegment } from 'next/navigation';
-import { Bot, KeyRound, MessageSquareText, Shirt, ShoppingCart, SlidersHorizontal, Store, Swords, type LucideIcon } from 'lucide-react';
+import { Bot, MessageSquareText, Shirt, ShoppingCart, SlidersHorizontal, Store, Swords, type LucideIcon } from 'lucide-react';
 import { api } from '@/lib/client/api';
 import { useApi } from '@/lib/client/hooks';
 import { AppShell, ErrorNote, Skeleton } from '../app-shell';
 import { runDateLabel } from '../format';
-import { Banner, Button, VerticalTab, cn } from '../ui';
+import { VerticalTab, cn } from '../ui';
 import { AssistantsPanel } from './assistants-panel';
 import { BrandPanel } from './brand-panel';
 import { BrandsPanel } from './brands-panel';
-import { KeysPanel } from './keys-panel';
 import { ProductsPanel } from './products-panel';
 import { QueriesPanel } from './queries-panel';
 import { RunDefaultsPanel } from './run-defaults-panel';
@@ -23,7 +22,6 @@ export const SETTINGS_TABS = [
   { slug: 'marketplaces', label: 'Marketplaces', icon: ShoppingCart },
   { slug: 'queries', label: 'Queries', icon: MessageSquareText },
   { slug: 'assistants', label: 'Assistants', icon: Bot },
-  { slug: 'keys', label: 'API keys', icon: KeyRound },
   { slug: 'run-defaults', label: 'Run defaults', icon: SlidersHorizontal },
 ] as const satisfies readonly { slug: string; label: string; icon: LucideIcon }[];
 
@@ -46,21 +44,14 @@ function PanelSkeleton() {
 export function SettingsScreen() {
   const segment = useSelectedLayoutSegment();
   const settings = useApi('settings', api.settings);
-  const keys = useApi('settings-keys', api.keys);
   const toast = useToast();
 
-  const noKeys = keys.data ? keys.data.every((k) => !k.keyPresent) : false;
-  // /settings lands on API keys while no assistant has a key, else on Brand.
-  const tab: SettingsTab | null = isTab(segment) ? segment : keys.data ? (noKeys ? 'keys' : 'brand') : keys.error ? 'brand' : null;
+  // /settings (and any unknown segment) lands on Brand.
+  const tab: SettingsTab = isTab(segment) ? segment : 'brand';
 
   const notify = (title: string, tone: ToastTone = 'success') => toast.show({ title, tone });
   const changed = (title: string, tone: ToastTone = 'success') => {
     notify(title, tone);
-    settings.reload();
-  };
-  const keysChanged = (title: string, tone: ToastTone = 'success') => {
-    notify(title, tone);
-    keys.reload();
     settings.reload();
   };
 
@@ -72,7 +63,7 @@ export function SettingsScreen() {
     .join(' · ');
 
   const panel = () => {
-    if (!tab || (!s && !settings.error)) return <PanelSkeleton />;
+    if (!s && !settings.error) return <PanelSkeleton />;
     if (!s) return <ErrorNote error={settings.error!} onRetry={settings.reload} />;
     switch (tab) {
       case 'brand':
@@ -86,9 +77,7 @@ export function SettingsScreen() {
       case 'queries':
         return <QueriesPanel queries={s.queries} products={s.products} defaultCity={s.runDefaults.city} onChanged={changed} />;
       case 'assistants':
-        return <AssistantsPanel assistants={s.assistants} keys={keys.data} keysError={keys.error} onChanged={changed} />;
-      case 'keys':
-        return <KeysPanel keys={keys.data} keysError={keys.error} onRetryKeys={keys.reload} assistants={s.assistants} onChanged={keysChanged} onAssistantChanged={changed} />;
+        return <AssistantsPanel assistants={s.assistants} onChanged={changed} />;
       case 'run-defaults':
         return (
           <RunDefaultsPanel
@@ -109,18 +98,6 @@ export function SettingsScreen() {
         <p className="type-body text-ink-500">{sub}</p>
       </header>
 
-      {noKeys && tab !== 'keys' && (
-        <Banner
-          tone="attention"
-          icon={KeyRound}
-          spin={false}
-          action={<Button size="sm" variant="secondary" href="/settings/keys">Add API keys</Button>}
-          className="-mt-4"
-        >
-          Add your API keys to start a run
-        </Banner>
-      )}
-
       <div className="-mt-2 flex flex-col gap-6 lg:flex-row lg:items-start">
         <nav aria-label="Settings sections" className="-mx-6 flex shrink-0 gap-1 overflow-x-auto px-6 pb-1 lg:sticky lg:top-6 lg:mx-0 lg:w-[282px] lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0">
           {SETTINGS_TABS.map((t) => (
@@ -132,11 +109,6 @@ export function SettingsScreen() {
                 active={tab === t.slug}
                 className="lg:max-w-none"
               />
-              {t.slug === 'keys' && noKeys && (
-                <span className="absolute top-1/2 right-4 size-2 -translate-y-1/2 rounded-full bg-marigold-500">
-                  <span className="sr-only">No keys yet</span>
-                </span>
-              )}
             </span>
           ))}
         </nav>

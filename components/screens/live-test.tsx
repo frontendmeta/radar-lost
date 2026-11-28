@@ -226,7 +226,7 @@ export function LiveTestDialog({ onClose }: { onClose: () => void }) {
                       aria-checked={on}
                       disabled={locked || !can}
                       onClick={() => setPicked(a.id)}
-                      title={!a.keyPresent ? 'Add a key in Settings' : !a.enabled ? 'Turned off in Settings' : undefined}
+                      title={!a.keyPresent ? 'Not connected right now' : !a.enabled ? 'Turned off in Settings' : undefined}
                       className={cn(
                         'flex flex-col gap-2.5 rounded-inner border p-4 text-left transition-colors',
                         on && can ? 'border-brand-500 bg-brand-50' : 'border-ink-200 bg-surface',
@@ -250,7 +250,7 @@ export function LiveTestDialog({ onClose }: { onClose: () => void }) {
                       <span className="flex min-w-0 flex-col">
                         <span className="type-body-strong text-ink-900">{a.label || ASSISTANT_LABEL[a.id]}</span>
                         <span className={cn('truncate text-[12px] leading-4 font-medium', can ? 'text-ink-500' : 'text-lost-700')}>
-                          {!a.keyPresent ? 'No key yet' : !a.enabled ? 'Turned off' : a.model ?? 'Default model'}
+                          {!a.keyPresent ? 'Not connected' : !a.enabled ? 'Turned off' : a.model ?? 'Default model'}
                         </span>
                       </span>
                     </button>
@@ -260,8 +260,7 @@ export function LiveTestDialog({ onClose }: { onClose: () => void }) {
               {stage === 'idle' && missingKeys.length > 0 && (
                 <p className="type-small text-ink-500">
                   {missingKeys.map((a) => a.label || ASSISTANT_LABEL[a.id]).join(', ').replace(/, ([^,]*)$/, ' and $1')}{' '}
-                  {missingKeys.length === 1 ? 'needs' : 'need'} an API key.{' '}
-                  <Link href="/settings" className="font-semibold text-brand-600 hover:underline">Add a key in Settings</Link>
+                  {missingKeys.length === 1 ? "isn't" : "aren't"} connected right now.
                 </p>
               )}
             </div>

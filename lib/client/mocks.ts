@@ -15,7 +15,6 @@ import type {
   Marketplace,
   Me,
   Product,
-  ProviderKeyInfo,
   Query,
   QueryRow,
   Rate,
@@ -396,27 +395,6 @@ const mockHealth = (): Health => ({
   keysPresent: { openai: true, anthropic: true, gemini: true },
 });
 
-// ---------- provider keys ----------
-
-const KEY_LABEL: Record<Assistant, string> = { openai: 'ChatGPT', anthropic: 'Claude', gemini: 'Gemini' };
-let keyState: ProviderKeyInfo[] = [
-  { assistant: 'openai', label: 'ChatGPT', source: 'ui', last4: '4f2a', keyPresent: true, updatedAt: '2026-11-22T07:52:00.000Z', updatedByEmail: 'demo@lostsaleradar.app' },
-  { assistant: 'anthropic', label: 'Claude', source: 'env', last4: null, keyPresent: true, updatedAt: null, updatedByEmail: null },
-  { assistant: 'gemini', label: 'Gemini', source: null, last4: null, keyPresent: false, updatedAt: null, updatedByEmail: null },
-];
-
-function saveMockKey(assistant: Assistant, body: Body): unknown {
-  const key = typeof body.apiKey === 'string' ? body.apiKey.trim() : '';
-  if (!key) return new MockError(400, 'bad_request', 'apiKey is required', 'apiKey');
-  if (key.length < 20 || key.length > 400 || /\s/.test(key)) return new MockError(400, 'bad_key', 'The key looks malformed (20–400 characters, no spaces)', 'apiKey');
-  if (/invalid/i.test(key)) return new MockError(400, 'key_invalid', `${KEY_LABEL[assistant]} rejected this key`, 'apiKey');
-  const info: ProviderKeyInfo = {
-    assistant, label: KEY_LABEL[assistant], source: 'ui', last4: key.slice(-4), keyPresent: true, updatedAt: new Date().toISOString(), updatedByEmail: mockMe.email,
-  };
-  keyState = keyState.map((k) => (k.assistant === assistant ? info : k));
-  return { ...info, verified: body.verify !== false };
-}
-
 // ---------- helpers ----------
 
 function list(p: URLSearchParams, key: string): string[] {
@@ -511,7 +489,6 @@ export function mockResponse(method: string, url: string, body: unknown): unknow
       }
       case '/api/lens/options': return lensOptions();
       case '/api/settings': return settingsBundle();
-      case '/api/settings/keys': return keyState;
     }
     if (seg[1] === 'runs' && seg.length === 3) return runStatusOf(seg[2]) ?? new MockError(404, 'not_found', 'Run not found');
     if (seg[1] === 'runs' && seg[3] === 'fixes') return seg[2] === FULL || seg[2] === PREV ? mockFixes : [];
@@ -547,16 +524,6 @@ export function mockResponse(method: string, url: string, body: unknown): unknow
   if (seg[1] === 'settings') {
     const id = seg[3];
     switch (seg[2]) {
-      case 'keys': {
-        const a = id as Assistant;
-        if (!ALL.includes(a)) return new MockError(404, 'not_found', `Assistant ${id} not found`);
-        if (method === 'PUT') return saveMockKey(a, b);
-        if (method === 'DELETE') {
-          keyState = keyState.map((k) => (k.assistant === a ? { ...k, source: null, last4: null, keyPresent: false, updatedAt: new Date().toISOString(), updatedByEmail: mockMe.email } : k));
-          return { ok: true };
-        }
-        return undefined;
-      }
       case 'run-defaults':
         settingsMeta = { ...settingsMeta, runDefaults: { ...settingsMeta.runDefaults, ...(b as object) } };
         touch();

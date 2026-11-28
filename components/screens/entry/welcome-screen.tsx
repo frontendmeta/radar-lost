@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowRight, Check, KeyRound, Radar, Rocket, SlidersHorizontal, TriangleAlert } from 'lucide-react';
+import { ArrowRight, Check, Radar, Rocket, SlidersHorizontal, TriangleAlert } from 'lucide-react';
 import type { AssistantInfo, Setup } from '@/lib/api-types';
 import { api } from '@/lib/client/api';
 import { useApi } from '@/lib/client/hooks';
@@ -79,8 +79,8 @@ function assistantsLine(assistants: AssistantInfo[]): { ok: boolean; text: strin
   const missing = on.filter((a) => !a.keyPresent).map(label);
   if (!on.length) return { ok: false, text: 'No AI shoppers turned on' };
   if (!missing.length) return { ok: true, text: `${listJoin(ready)} ready` };
-  if (!ready.length) return { ok: false, text: `Add API keys for ${listJoin(missing)}` };
-  return { ok: false, text: `${listJoin(ready)} ready · ${listJoin(missing)} needs a key` };
+  if (!ready.length) return { ok: false, text: 'No AI shoppers connected right now' };
+  return { ok: false, text: `${listJoin(ready)} ready · ${listJoin(missing)} not connected` };
 }
 
 function WelcomeBody({ setup, hasRuns }: { setup: Setup; hasRuns: boolean | undefined }) {
@@ -88,17 +88,15 @@ function WelcomeBody({ setup, hasRuns }: { setup: Setup; hasRuns: boolean | unde
   const ai = assistantsLine(assistants);
   const anyReady = assistants.some((a) => a.enabled && a.keyPresent);
 
-  // Primary action: keys first, then the first run, then the radar.
+  // Primary action: the first run when shoppers are connected and nothing has run, else the radar.
   const primary = !anyReady
-    ? { href: '/settings', icon: KeyRound, label: 'Add API keys' }
+    ? { href: '/', icon: Radar, label: 'Open the radar' }
     : hasRuns === false
       ? { href: '/runs', icon: Rocket, label: 'Plan the first run' }
       : { href: '/', icon: Radar, label: 'Open the radar' };
   const secondary = !anyReady
-    ? { href: '/', icon: Radar, label: 'Open the radar' }
-    : !ai.ok
-      ? { href: '/settings', icon: KeyRound, label: 'Add the missing key' }
-      : { href: '/settings', icon: SlidersHorizontal, label: 'Review settings' };
+    ? { href: '/runs', icon: Rocket, label: 'See past runs' }
+    : { href: '/settings', icon: SlidersHorizontal, label: 'Review settings' };
 
   return (
     <>

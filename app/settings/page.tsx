@@ -1,4 +1,4 @@
-// /settings: the layout's screen opens API keys when no key is set yet, else Brand.
+// /settings: the layout's screen opens the Brand tab.
 export default function SettingsPage() {
   return null;
 }

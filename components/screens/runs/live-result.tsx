@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { IndianRupee } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { Assistant, BrandOutcome, LossReason, RunTask, Trace } from '@/lib/api-types';
@@ -119,21 +118,15 @@ export function LiveResultCard({ trace, brandId, brandName, className }: { trace
   );
 }
 
-/** Inline API error; a missing provider key links to Settings. */
+/** Inline API error. A missing provider key reads as "not connected", with no link. */
 export function RunErrorNote({ error, className }: { error: unknown; className?: string }) {
   const keyMissing = isApiError(error) && error.code === 'key_missing';
-  const raw = error instanceof Error && error.message ? error.message.replace(/^key_missing:\s*/, '') : 'Something went wrong';
-  // "openai has no API key" → "ChatGPT has no API key."
+  const raw = error instanceof Error && error.message ? error.message : 'Something went wrong';
   const named = raw.replace(/\b(openai|anthropic|gemini)\b/g, (a) => ASSISTANT_LABEL[a as Assistant]);
-  const message = keyMissing && !/[.!?]$/.test(named) ? `${named}.` : named;
+  const message = keyMissing ? "This assistant isn't connected right now." : named;
   return (
     <div role="alert" className={cn('flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-inner bg-lost-50 px-4 py-3 type-small text-lost-700', className)}>
       <span>{message}</span>
-      {keyMissing && (
-        <Link href="/settings" className="font-semibold underline">
-          Add a key in Settings
-        </Link>
-      )}
     </div>
   );
 }
